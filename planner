@@ -390,8 +390,8 @@ let state = load() || {devCols:defDevCols(),posts:[],taskCols:defTaskCols(),task
 state.devCols=state.devCols||defDevCols();state.posts=state.posts||[];
 state.taskCols=state.taskCols||defTaskCols();state.tasks=state.tasks||[];state.mats=state.mats||defMats();
 /* ── Хранилище: localStorage + Supabase ── */
-const SB_URL = "https://zycbnenagwcnjufzlqna.supabase.co";
-const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5Y2JuZW5hZ3djbmp1ZnpscW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MDI0NjgsImV4cCI6MjEwMDI3ODQ2OH0.NO2S2_prs-Z4ES2RPhPJrU4_HhUWes_p8W6-Wb1ozGU";
+const SB_URL = "https://jjkysewwwqpsnttnqbzb.supabase.co";
+const SB_KEY = "sb_publishable_lU-nlWKkQDCcKzFXo_EoeQ_FKRBD8qI";
 const SB_HEADERS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
 let cloudTimer = null;
 function saveCloud(){
