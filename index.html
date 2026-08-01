@@ -27,6 +27,9 @@
     --shadow-sm:0 5px 16px rgba(74,90,122,.13);
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  .chansel{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
+  .chbtn{border:1.5px solid rgba(61,90,138,.35);background:rgba(255,255,255,.55);color:var(--dusk);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Quicksand';transition:.15s}
+  .chbtn.on{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
   .grip{cursor:grab;opacity:.45;font-size:13px;margin-right:4px;user-select:none}
   .grip:active{cursor:grabbing}
   body{
@@ -320,7 +323,12 @@
     <label class="f">Описание</label>
     <textarea id="pDesc" placeholder="что за пост, о чём, детали"></textarea>
     <label class="f">Канал</label>
-    <select id="pChan"></select>
+    <div class="chansel" id="pChans"></div>
+    <label class="f">Рубрика</label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="pRubric" style="flex:1;min-width:130px"></select>
+      <input id="pNewRubric" placeholder="или новая…" style="flex:1;min-width:110px">
+    </div>
     <label class="f">Дата поста</label>
     <input type="date" id="pDate">
     <label class="f">Подзадачи</label>
@@ -375,6 +383,28 @@
 <script>
 const CHANNELS = ['Telegram','VK','Instagram','MAX','VC','Дзен','YouTube','Сайт','Рассылка','Другое'];
 function c(){return 'id'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
+const RUB_COLORS=['#7fb5a3','#e8a06a','#e3c25f','#7f9fd0','#d78fa5','#f0d98a','#d97b6c','#c9b6d9','#8fbf8f','#9dc8c0'];
+function defRubrics(){return [
+  {id:'rb-product',name:'Продукт',color:'#7fb5a3'},
+  {id:'rb-polza',name:'Польза',color:'#e8a06a'},
+  {id:'rb-case',name:'Кейс',color:'#e3c25f'},
+  {id:'rb-qa',name:'Вопрос-ответ',color:'#7f9fd0'},
+  {id:'rb-insight',name:'Инсайт',color:'#d78fa5'},
+  {id:'rb-anons',name:'Анонс',color:'#f0d98a'},
+  {id:'rb-info',name:'Инфоповод',color:'#d97b6c'},
+  {id:'rb-comm',name:'Коммьюнити',color:'#c9b6d9'},
+  {id:'rb-interview',name:'Интервью',color:'#8fbf8f'},
+  {id:'rb-team',name:'Команда',color:'#9dc8c0'}]}
+function normalizeState(s){
+  if(!s)return s;
+  if(!s.rubrics||!s.rubrics.length)s.rubrics=defRubrics();
+  (s.posts||[]).forEach(p=>{
+    if(!p.chans)p.chans=p.chan?[p.chan]:[];
+    delete p.chan;
+    if(p.rubric===undefined)p.rubric='';
+  });
+  return s;
+}
 function defDevCols(){return[
   {id:c(),name:'Идея'},{id:c(),name:'Проработка'},{id:c(),name:'Сбор фактуры'},
   {id:c(),name:'В работе'},{id:c(),name:'Согласование'},{id:c(),name:'Готово'}]}
@@ -388,7 +418,7 @@ function defMats(){return[
   {id:c(),label:'Telegram — getitrest',url:'https://t.me/getitrest',note:'Наш Telegram-канал',star:true},
   {id:c(),label:'VC.RU — Get it',url:'https://vc.ru/u/2061907-get-it',note:'Профиль и статьи на VC.RU',star:true}]}
 
-let state = load() || {devCols:defDevCols(),posts:[],taskCols:defTaskCols(),tasks:[],mats:defMats()};
+let state = normalizeState(load() || {devCols:defDevCols(),posts:[],taskCols:defTaskCols(),tasks:[],mats:defMats()});
 state.devCols=state.devCols||defDevCols();state.posts=state.posts||[];
 state.taskCols=state.taskCols||defTaskCols();state.tasks=state.tasks||[];state.mats=state.mats||defMats();
 /* ── Хранилище: localStorage + Supabase ── */
@@ -413,7 +443,7 @@ function loadCloud(){
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(rows){
       if (rows && rows.length > 0 && rows[0].data && rows[0].data.posts) {
-        state = rows[0].data;
+        state = normalizeState(rows[0].data);
         localStorage.setItem('getit_sky', JSON.stringify(state));
         renderCal(); renderDev(); renderTask(); renderMat();
       }
@@ -453,7 +483,11 @@ function renderCal(){
     state.posts.filter(p=>p.date===key).forEach(p=>{
       const col=state.devCols.find(x=>x.id===p.col);const st=colStatus(col?col.name:'');
       const pv=document.createElement('div');pv.className='post st-'+st;
-      pv.innerHTML=`<span class="ptype">${esc(p.chan||'—')} · ${esc(col?col.name:'')}</span>${esc(p.name)}`;
+      const AB={'Telegram':'TG','Instagram':'IG','VK':'VK','MAX':'MAX','Дзен':'Дз','YouTube':'YT','Сайт':'Сайт','Рассылка':'Mail','VC':'VC','Другое':'…'};
+      const chs=(p.chans||[]).map(x=>AB[x]||x).join('·')||'—';
+      const rb=state.rubrics.find(r=>r.id===p.rubric);
+      pv.innerHTML=`<span class="ptype">${chs} · ${esc(col?col.name:'')}</span>${esc(p.name)}`;
+      if(rb){pv.style.background=rb.color+'66';pv.style.borderLeft='3px solid '+rb.color}
       pv.onclick=()=>openPost(p.id,null,key);el.appendChild(pv)});
     const add=document.createElement('button');add.className='day-add';add.innerText='＋ пост';
     add.onclick=()=>openPost(null,null,key);el.appendChild(add);cal.appendChild(el);
@@ -482,7 +516,10 @@ function postCard(p){
   d.addEventListener('dragstart',e=>{e.dataTransfer.setData('id',p.id);d.classList.add('dragging')});
   d.addEventListener('dragend',()=>d.classList.remove('dragging'));
   d.onclick=()=>{if(!d.classList.contains('dragging'))openPost(p.id)};
-  let meta='';if(p.chan)meta+=`<span class="chip chan">${esc(p.chan)}</span>`;if(p.date)meta+=dueChip(p.date);
+  let meta='';const rb=state.rubrics.find(r=>r.id===p.rubric);
+  if(rb)meta+=`<span class="chip" style="background:${rb.color};color:#fff">#${esc(rb.name)}</span>`;
+  (p.chans||[]).forEach(ch=>meta+=`<span class="chip chan">${esc(ch)}</span>`);
+  if(p.date)meta+=dueChip(p.date);
   if(p.subs&&p.subs.length){const dn=p.subs.filter(s=>s.done).length;meta+=`<span class="chip subs">✓ ${dn}/${p.subs.length}</span>`}
   d.innerHTML=`<span class="postflag">★</span><div class="card-title">${esc(p.name)}</div>
     ${p.desc?`<div class="card-desc">${esc(p.desc)}</div>`:''}${meta?`<div class="card-meta">${meta}</div>`:''}`;
@@ -551,17 +588,22 @@ function delCol(board,id){
 }
 
 let editPostId=null,newPostCol=null,draftSubs=[];
-function fillChan(sel,val){sel.innerHTML='<option value="">— канал —</option>'+
-  CHANNELS.map(ch=>`<option value="${ch}" ${ch===val?'selected':''}>${ch}</option>`).join('')}
+function fillChans(box,selected){box.innerHTML='';const sel=new Set(selected||[]);
+  CHANNELS.forEach(ch=>{const b=document.createElement('button');b.type='button';
+    b.className='chbtn'+(sel.has(ch)?' on':'');b.innerText=ch;
+    b.onclick=()=>b.classList.toggle('on');box.appendChild(b)})}
+function readChans(){return [...document.querySelectorAll('#pChans .chbtn.on')].map(b=>b.innerText)}
+function fillRubrics(sel,val){sel.innerHTML='<option value="">— рубрика —</option>'+
+  state.rubrics.map(r=>`<option value="${r.id}" ${r.id===val?'selected':''}>#${esc(r.name)}</option>`).join('')}
 function openPost(id,col,date){
-  editPostId=id;newPostCol=col;fillChan(document.getElementById('pChan'));
+  editPostId=id;newPostCol=col;
   if(id){const p=state.posts.find(x=>x.id===id);document.getElementById('postTitle').innerText='Пост';
     document.getElementById('pName').value=p.name;document.getElementById('pDesc').value=p.desc||'';
-    document.getElementById('pChan').value=p.chan||'';document.getElementById('pDate').value=p.date||'';
+    fillChans(document.getElementById('pChans'),p.chans||[]);fillRubrics(document.getElementById('pRubric'),p.rubric||'');document.getElementById('pNewRubric').value='';document.getElementById('pDate').value=p.date||'';
     draftSubs=JSON.parse(JSON.stringify(p.subs||[]));document.getElementById('pDel').style.display='block';
   }else{document.getElementById('postTitle').innerText='Новый пост';
     document.getElementById('pName').value='';document.getElementById('pDesc').value='';
-    document.getElementById('pChan').value='';document.getElementById('pDate').value=date||'';
+    fillChans(document.getElementById('pChans'),[]);fillRubrics(document.getElementById('pRubric'),'');document.getElementById('pNewRubric').value='';document.getElementById('pDate').value=date||'';
     draftSubs=[];document.getElementById('pDel').style.display='none';}
   renderDraftSubs();document.getElementById('ovPost').classList.add('on');
   setTimeout(()=>document.getElementById('pName').focus(),50);
@@ -575,10 +617,15 @@ function addSubInput(){const inp=document.getElementById('pSubNew');const v=inp.
   if(!v)return;draftSubs.push({t:v,done:false});inp.value='';renderDraftSubs();inp.focus()}
 function savePost(){
   const name=document.getElementById('pName').value.trim();if(!name){document.getElementById('pName').focus();return}
-  const desc=document.getElementById('pDesc').value.trim();const chan=document.getElementById('pChan').value;
+  const desc=document.getElementById('pDesc').value.trim();const chans=readChans();
   const date=document.getElementById('pDate').value;
-  if(editPostId){const p=state.posts.find(x=>x.id===editPostId);p.name=name;p.desc=desc;p.chan=chan;p.date=date;p.subs=draftSubs;}
-  else{const col=newPostCol||(state.devCols[0]&&state.devCols[0].id);state.posts.push({id:c(),name,desc,chan,date,col,subs:draftSubs})}
+  let rubric=document.getElementById('pRubric').value;
+  const nr=document.getElementById('pNewRubric').value.trim().replace(/^#/,'');
+  if(nr){const ex=state.rubrics.find(r=>r.name.toLowerCase()===nr.toLowerCase());
+    if(ex)rubric=ex.id;
+    else{const nid='rb'+c().slice(2);state.rubrics.push({id:nid,name:nr,color:RUB_COLORS[state.rubrics.length%RUB_COLORS.length]});rubric=nid}}
+  if(editPostId){const p=state.posts.find(x=>x.id===editPostId);p.name=name;p.desc=desc;p.chans=chans;p.rubric=rubric;p.date=date;p.subs=draftSubs;}
+  else{const col=newPostCol||(state.devCols[0]&&state.devCols[0].id);state.posts.push({id:c(),name,desc,chans,rubric,date,col,subs:draftSubs})}
   save();closeOv('ovPost');renderCal();renderDev();
 }
 function deletePost(){if(!confirm('Удалить пост? Он исчезнет и из календаря, и из доски.'))return;
