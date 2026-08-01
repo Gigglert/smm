@@ -27,6 +27,8 @@
     --shadow-sm:0 5px 16px rgba(74,90,122,.13);
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  .grip{cursor:grab;opacity:.45;font-size:13px;margin-right:4px;user-select:none}
+  .grip:active{cursor:grabbing}
   body{
     font-family:'Quicksand',system-ui,sans-serif;color:var(--ink);min-height:100vh;
     background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--sky-low) 100%)
@@ -39,7 +41,7 @@
       radial-gradient(400px 200px at 20% 60%, rgba(255,255,255,.28), transparent 70%),
       radial-gradient(500px 240px at 85% 30%, rgba(255,255,255,.22), transparent 70%);
     filter:blur(6px);z-index:0}
-  .wrap{max-width:1200px;margin:0 auto;padding:28px 22px 90px;position:relative;z-index:1}
+  .wrap{max-width:1280px;margin:0 auto;padding:28px 14px 90px;position:relative;z-index:1}
 
   header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
   .logo{height:58px;width:auto;flex:none;color:var(--cloud);
@@ -66,9 +68,9 @@
     border-radius:28px;padding:20px;box-shadow:var(--shadow)}
 
   /* канбан */
-  .board{display:flex;gap:16px;overflow-x:auto;padding:4px 0 16px;align-items:flex-start}
+  .board{display:flex;gap:12px;overflow-x:auto;padding:4px 0 16px;align-items:flex-start}
   .col{background:rgba(248,244,246,.72);backdrop-filter:blur(12px);border:2px solid rgba(255,255,255,.7);
-    border-radius:24px;min-width:270px;max-width:270px;padding:14px;box-shadow:var(--shadow-sm)}
+    border-radius:24px;min-width:200px;max-width:none;flex:1 1 0;padding:12px;box-shadow:var(--shadow-sm)}
   .col-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
   .col-title{font-family:'Caveat';font-weight:700;font-size:22px;color:var(--dusk);flex:1;outline:none;
     border-radius:8px;padding:0 5px}
@@ -463,6 +465,7 @@ function renderDev(){
   state.devCols.forEach(col=>{
     const posts=state.posts.filter(p=>p.col===col.id);const el=document.createElement('div');el.className='col';
     el.innerHTML=`<div class="col-head">
+      <span class="grip" draggable="true" ondragstart="colDragStart(event,'dev','${col.id}')">⠿</span>
       <div class="col-title" contenteditable="true" spellcheck="false" onblur="renameCol('dev','${col.id}',this.innerText)"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${esc(col.name)}</div>
       <span class="col-count">${posts.length}</span>
@@ -470,7 +473,7 @@ function renderDev(){
       <div class="col-drop"></div>
       <button class="addcard" onclick="openPost(null,'${col.id}')">＋ новый пост</button>`;
     const drop=el.querySelector('.col-drop');posts.forEach(p=>drop.appendChild(postCard(p)));
-    wireDrop(el,id=>{const p=state.posts.find(x=>x.id===id);if(p){p.col=col.id;save();renderDev()}});
+    wireDrop(el,id=>{const p=state.posts.find(x=>x.id===id);if(p){p.col=col.id;save();renderDev()}});wireColDrop(el,'dev',col.id);
     b.appendChild(el)});
   b.appendChild(addColBtn('dev'));
 }
@@ -491,6 +494,7 @@ function renderTask(){
   state.taskCols.forEach(col=>{
     const tasks=state.tasks.filter(t=>t.col===col.id);const el=document.createElement('div');el.className='col';
     el.innerHTML=`<div class="col-head">
+      <span class="grip" draggable="true" ondragstart="colDragStart(event,'task','${col.id}')">⠿</span>
       <div class="col-title" contenteditable="true" spellcheck="false" onblur="renameCol('task','${col.id}',this.innerText)"
         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${esc(col.name)}</div>
       <span class="col-count">${tasks.length}</span>
@@ -498,7 +502,7 @@ function renderTask(){
       <div class="col-drop"></div>
       <button class="addcard" onclick="openTask(null,'${col.id}')">＋ новая карточка</button>`;
     const drop=el.querySelector('.col-drop');tasks.forEach(t=>drop.appendChild(taskCard(t)));
-    wireDrop(el,id=>{const t=state.tasks.find(x=>x.id===id);if(t){t.col=col.id;save();renderTask()}});
+    wireDrop(el,id=>{const t=state.tasks.find(x=>x.id===id);if(t){t.col=col.id;save();renderTask()}});wireColDrop(el,'task',col.id);
     b.appendChild(el)});
   b.appendChild(addColBtn('task'));
 }
@@ -513,6 +517,19 @@ function taskCard(t){
   return d;
 }
 
+function colDragStart(e,board,id){e.dataTransfer.setData('colid',id);e.dataTransfer.setData('colboard',board)}
+function reorderCol(board,dragId,targetId){
+  if(dragId===targetId)return;
+  const cols=board==='dev'?state.devCols:state.taskCols;
+  const from=cols.findIndex(x=>x.id===dragId),to=cols.findIndex(x=>x.id===targetId);
+  if(from<0||to<0)return;
+  const [m]=cols.splice(from,1);cols.splice(to,0,m);
+  save();board==='dev'?renderDev():renderTask();
+}
+function wireColDrop(el,board,colId){
+  el.addEventListener('drop',e=>{const cid=e.dataTransfer.getData('colid');
+    if(cid){e.preventDefault();reorderCol(e.dataTransfer.getData('colboard')||board,cid,colId)}});
+}
 function wireDrop(el,onDrop){
   el.addEventListener('dragover',e=>{e.preventDefault();el.style.borderColor='var(--accent)'});
   el.addEventListener('dragleave',()=>el.style.borderColor='');
