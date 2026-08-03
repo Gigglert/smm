@@ -6,7 +6,7 @@
 <title>Get IT // SMM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Montserrat:wght@600;700;800&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --dusk:#4a5a7a;         /* сумеречно-синий текст (под цвет дудлов) */
@@ -28,12 +28,12 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   .chansel{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
-  .chbtn{border:1.5px solid rgba(61,90,138,.35);background:rgba(255,255,255,.55);color:var(--dusk);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Quicksand';transition:.15s}
+  .chbtn{border:1.5px solid rgba(61,90,138,.35);background:rgba(255,255,255,.55);color:var(--dusk);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Roboto',Arial,sans-serif;transition:.15s}
   .chbtn.on{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
   .grip{cursor:grab;opacity:.45;font-size:13px;margin-right:4px;user-select:none}
   .grip:active{cursor:grabbing}
   body{
-    font-family:'Quicksand',system-ui,sans-serif;color:var(--ink);min-height:100vh;
+    font-family:'Roboto',Arial,system-ui,sans-serif;color:var(--ink);min-height:100vh;
     background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--sky-low) 100%)
       fixed;
     -webkit-font-smoothing:antialiased;position:relative;overflow-x:hidden;
@@ -50,41 +50,39 @@
   .logo{height:58px;width:auto;flex:none;color:var(--cloud);
     filter:drop-shadow(0 3px 14px rgba(61,90,138,.5)) drop-shadow(0 0 2px rgba(61,90,138,.4))}
   .top-spacer{flex:1}
-  .clock{font-family:'Caveat',cursive;font-size:22px;color:var(--cloud);opacity:.9;
-    background:rgba(248,244,246,.28);border:1.5px solid rgba(255,255,255,.5);border-radius:20px;
-    padding:4px 16px;backdrop-filter:blur(6px)}
 
   /* вкладки */
   .tabs{display:flex;gap:10px;margin:24px 0 24px;flex-wrap:wrap}
-  .tabs button{font-family:'Quicksand';font-weight:700;font-size:14px;color:var(--dusk);
+  .tabs button{font-family:'Roboto',Arial,sans-serif;font-weight:700;font-size:14px;color:var(--dusk);
     background:rgba(248,244,246,.62);backdrop-filter:blur(8px);border:2px solid rgba(255,255,255,.7);
     padding:10px 22px;border-radius:30px;cursor:pointer;transition:.25s;box-shadow:var(--shadow-sm)}
   .tabs button:hover{background:rgba(248,244,246,.88);transform:translateY(-1px)}
   .tabs button.on{background:linear-gradient(135deg,var(--accent),var(--accent-dp));color:#fff;
     border-color:transparent;box-shadow:0 6px 20px rgba(231,154,138,.45)}
 
-  h2.sec{font-family:'Caveat',cursive;font-weight:700;font-size:34px;color:var(--cloud);margin:6px 2px 16px;
+  h2.sec{font-family:'Montserrat',sans-serif;font-weight:800;font-size:24px;color:var(--cloud);margin:6px 2px 16px;
     text-shadow:0 1px 8px rgba(61,90,138,.35);display:flex;align-items:center;gap:10px}
-  .hint{font-family:'Quicksand';font-size:12px;color:rgba(255,255,255,.9);font-weight:600}
+  .hint{font-family:'Roboto',Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.9);font-weight:600}
 
   .panel{background:rgba(248,244,246,.74);backdrop-filter:blur(14px);border:2px solid rgba(255,255,255,.72);
     border-radius:28px;padding:20px;box-shadow:var(--shadow)}
 
   /* канбан */
-  .board{display:flex;gap:12px;overflow-x:auto;padding:4px 0 16px;align-items:flex-start}
+  .board{display:flex;gap:12px;overflow-x:auto;padding:4px 0 16px;align-items:stretch}
   .col{background:rgba(248,244,246,.72);backdrop-filter:blur(12px);border:2px solid rgba(255,255,255,.7);
-    border-radius:24px;min-width:200px;max-width:none;flex:1 1 0;padding:12px;box-shadow:var(--shadow-sm)}
+    border-radius:24px;min-width:200px;max-width:none;flex:1 1 0;padding:12px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
+  .col>.card:last-of-type{margin-bottom:auto}
   .col-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-  .col-title{font-family:'Caveat';font-weight:700;font-size:22px;color:var(--dusk);flex:1;outline:none;
+  .col-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:16px;color:var(--dusk);flex:1;outline:none;
     border-radius:8px;padding:0 5px}
   .col-title:focus{background:rgba(231,154,138,.16)}
   .col-count{background:rgba(231,154,138,.2);color:var(--accent-dp);font-weight:700;font-size:12px;
-    border-radius:20px;padding:2px 10px;font-family:'Quicksand'}
+    border-radius:20px;padding:2px 10px;font-family:'Roboto',Arial,sans-serif}
   .col-x{border:none;background:transparent;color:var(--dusk-soft);cursor:pointer;font-size:16px;
     width:24px;height:24px;border-radius:8px;transition:.15s}
   .col-x:hover{background:rgba(231,154,138,.2);color:var(--accent-dp)}
   .add-col{min-width:150px;max-width:150px;background:transparent;border:2px dashed rgba(255,255,255,.75);
-    border-radius:24px;color:var(--cloud);font-family:'Caveat';font-weight:700;font-size:20px;cursor:pointer;
+    border-radius:24px;color:var(--cloud);font-family:'Montserrat',sans-serif;font-weight:700;font-size:20px;cursor:pointer;
     padding:18px 10px;transition:.2s;align-self:stretch;text-shadow:0 1px 6px rgba(61,90,138,.3)}
   .add-col:hover{background:rgba(248,244,246,.3)}
 
@@ -92,20 +90,20 @@
     margin-bottom:10px;box-shadow:0 5px 16px rgba(74,90,122,.12);transition:.2s;cursor:grab;position:relative}
   .card:hover{transform:translateY(-3px) rotate(-.4deg);box-shadow:0 12px 28px rgba(74,90,122,.2)}
   .card.dragging{opacity:.45;transform:rotate(2deg)}
-  .card-title{font-family:'Quicksand';font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.3;word-break:break-word}
+  .card-title{font-family:'Roboto',Arial,sans-serif;font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.3;word-break:break-word}
   .card-desc{font-size:12.5px;color:var(--dusk-soft);margin-top:4px;line-height:1.35;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .card-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
-  .chip{font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 9px;font-family:'Quicksand'}
+  .chip{font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 9px;font-family:'Roboto',Arial,sans-serif}
   .chip.chan{background:rgba(169,180,208,.32);color:var(--dusk)}
   .chip.tag{background:rgba(125,154,134,.22);color:#5c7a66}
   .chip.subs{background:rgba(248,244,246,.9);color:var(--dusk-soft);border:1px solid rgba(135,144,172,.3)}
   .chip.due{background:rgba(125,154,134,.2);color:#5c7a66}
   .chip.due.soon{background:rgba(216,164,95,.22);color:#b07d30}
   .chip.due.over{background:rgba(231,154,138,.24);color:var(--accent-dp)}
-  .postflag{position:absolute;top:9px;right:11px;font-family:'Caveat';font-size:14px;color:var(--accent);opacity:.75}
+  .postflag{position:absolute;top:9px;right:11px;font-family:'Montserrat',sans-serif;font-size:14px;color:var(--accent);opacity:.75}
   .addcard{width:100%;border:2px dashed rgba(231,154,138,.4);background:transparent;color:var(--accent-dp);
-    font-family:'Quicksand';font-weight:700;font-size:13px;cursor:pointer;padding:9px;border-radius:16px;transition:.2s}
+    font-family:'Roboto',Arial,sans-serif;font-weight:700;font-size:13px;cursor:pointer;padding:9px;border-radius:16px;transition:.2s}
   .addcard:hover{background:rgba(248,244,246,.55)}
 
   /* календарь */
@@ -115,20 +113,20 @@
   .month-nav button{border:none;background:rgba(231,154,138,.18);color:var(--accent-dp);width:34px;height:34px;
     border-radius:50%;cursor:pointer;font-size:18px;transition:.15s}
   .month-nav button:hover{background:var(--accent);color:#fff}
-  .month-lbl{font-family:'Caveat',cursive;font-weight:700;font-size:28px;color:var(--dusk);min-width:200px;text-align:center}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:'Quicksand';font-size:11px;color:rgba(255,255,255,.92);font-weight:600}
+  .month-lbl{font-family:'Montserrat',sans-serif;font-weight:700;font-size:28px;color:var(--dusk);min-width:200px;text-align:center}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:'Roboto',Arial,sans-serif;font-size:11px;color:rgba(255,255,255,.92);font-weight:600}
   .legend span{display:inline-flex;align-items:center;gap:5px}
   .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
 
   .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}
-  .dow{font-family:'Caveat';font-weight:700;font-size:18px;color:var(--cloud);text-align:center;
+  .dow{font-family:'Montserrat',sans-serif;font-weight:700;font-size:18px;color:var(--cloud);text-align:center;
     text-shadow:0 1px 6px rgba(61,90,138,.3)}
   .day{background:rgba(248,244,246,.62);border:1px solid rgba(255,255,255,.85);border-radius:16px;
     min-height:116px;padding:8px;transition:.15s;display:flex;flex-direction:column;gap:5px}
   .day.empty{background:transparent;border:none}
   .day:not(.empty):hover{background:rgba(248,244,246,.82)}
   .day.today{border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(231,154,138,.18)}
-  .day-num{font-family:'Caveat';font-weight:700;font-size:17px;color:var(--dusk-soft);align-self:flex-end}
+  .day-num{font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;color:var(--dusk-soft);align-self:flex-end}
   .day.today .day-num{color:var(--accent-dp)}
   .post{border-radius:11px;padding:5px 8px;font-size:11.5px;font-weight:600;line-height:1.25;cursor:pointer;
     color:var(--ink);transition:.15s;word-break:break-word;background:rgba(169,180,208,.22);
@@ -137,9 +135,9 @@
   .post.st-done{border-left-color:var(--oxide)}
   .post.st-work{border-left-color:var(--amber)}
   .post.st-idea{border-left-color:var(--dusk-soft)}
-  .post .ptype{display:block;font-family:'Quicksand';font-size:8.5px;font-weight:700;opacity:.7;
+  .post .ptype{display:block;font-family:'Roboto',Arial,sans-serif;font-size:8.5px;font-weight:700;opacity:.7;
     text-transform:uppercase;letter-spacing:.4px;color:var(--dusk)}
-  .day-add{border:none;background:transparent;color:var(--dusk-soft);font-family:'Caveat';font-weight:700;
+  .day-add{border:none;background:transparent;color:var(--dusk-soft);font-family:'Montserrat',sans-serif;font-weight:700;
     cursor:pointer;font-size:15px;border-radius:8px;padding:2px;margin-top:auto;transition:.15s}
   .day-add:hover{color:var(--accent-dp)}
 
@@ -149,22 +147,22 @@
     border-radius:22px;padding:17px;position:relative;transition:.2s;display:flex;flex-direction:column;gap:8px;
     box-shadow:var(--shadow-sm)}
   .mat:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-  .mat-plat{font-family:'Quicksand';font-size:10px;color:var(--accent-dp);letter-spacing:1.5px;
+  .mat-plat{font-family:'Roboto',Arial,sans-serif;font-size:10px;color:var(--accent-dp);letter-spacing:1.5px;
     text-transform:uppercase;font-weight:700}
-  .mat a.mat-link{font-family:'Caveat',cursive;font-weight:700;font-size:26px;color:var(--dusk);text-decoration:none;
+  .mat a.mat-link{font-family:'Montserrat',sans-serif;font-weight:700;font-size:26px;color:var(--dusk);text-decoration:none;
     word-break:break-word;line-height:1.05;transition:.15s}
   .mat a.mat-link:hover{color:var(--accent-dp)}
   .mat-note{font-size:13px;color:var(--dusk-soft);line-height:1.4}
-  .mat-url{font-family:'Quicksand';font-size:10px;color:var(--dusk-soft);word-break:break-all;opacity:.75;
+  .mat-url{font-family:'Roboto',Arial,sans-serif;font-size:10px;color:var(--dusk-soft);word-break:break-all;opacity:.75;
     border-top:1px solid rgba(135,144,172,.25);padding-top:8px;margin-top:auto}
   .mat-x{position:absolute;top:11px;right:11px;border:none;background:transparent;color:var(--dusk-soft);
     cursor:pointer;font-size:14px;width:24px;height:24px;border-radius:8px;transition:.15s;opacity:0}
   .mat:hover .mat-x{opacity:1}
   .mat-x:hover{background:rgba(231,154,138,.2);color:var(--accent-dp)}
   .mat.star{border-color:var(--accent)}
-  .mat-star{position:absolute;top:13px;right:14px;font-family:'Caveat';font-size:16px;color:var(--accent);font-weight:700}
+  .mat-star{position:absolute;top:13px;right:14px;font-family:'Montserrat',sans-serif;font-size:16px;color:var(--accent);font-weight:700}
   .mat-add{background:transparent;border:2px dashed rgba(255,255,255,.75);border-radius:22px;color:var(--cloud);
-    font-family:'Caveat';font-weight:700;font-size:24px;cursor:pointer;min-height:150px;transition:.2s;
+    font-family:'Montserrat',sans-serif;font-weight:700;font-size:24px;cursor:pointer;min-height:150px;transition:.2s;
     text-shadow:0 1px 6px rgba(61,90,138,.3)}
   .mat-add:hover{background:rgba(248,244,246,.32)}
 
@@ -176,12 +174,12 @@
     border-radius:26px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:26px;
     box-shadow:0 24px 60px rgba(61,73,99,.4);animation:pop .2s;position:relative}
   @keyframes pop{from{transform:translateY(12px) scale(.98);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-  .modal h3{font-family:'Caveat',cursive;font-weight:700;font-size:32px;color:var(--dusk);margin-bottom:14px}
-  label.f{display:block;font-family:'Quicksand';font-weight:700;font-size:11px;color:var(--dusk-soft);
+  .modal h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:32px;color:var(--dusk);margin-bottom:14px}
+  label.f{display:block;font-family:'Roboto',Arial,sans-serif;font-weight:700;font-size:11px;color:var(--dusk-soft);
     letter-spacing:.6px;text-transform:uppercase;margin:14px 0 6px}
   .modal input[type=text],.modal input[type=url],.modal input[type=date],.modal select,.modal textarea{
     width:100%;border:2px solid rgba(135,144,172,.28);background:#fff;border-radius:14px;padding:11px 14px;
-    font-family:'Quicksand';font-weight:500;font-size:15px;color:var(--ink);outline:none;transition:.15s}
+    font-family:'Roboto',Arial,sans-serif;font-weight:500;font-size:15px;color:var(--ink);outline:none;transition:.15s}
   .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--accent);
     box-shadow:0 0 0 3px rgba(231,154,138,.15)}
   .modal textarea{resize:vertical;min-height:70px;line-height:1.4}
@@ -193,7 +191,7 @@
     cursor:pointer;flex:none;transition:.15s;position:relative;background:#fff}
   .sub input[type=checkbox]:checked{background:var(--oxide);border-color:var(--oxide)}
   .sub input[type=checkbox]:checked::after{content:"✓";position:absolute;color:#fff;font-size:13px;font-weight:700;left:3px;top:-1px}
-  .sub span{flex:1;font-size:15px;font-family:'Quicksand';font-weight:500}
+  .sub span{flex:1;font-size:15px;font-family:'Roboto',Arial,sans-serif;font-weight:500}
   .sub span.done{text-decoration:line-through;color:var(--dusk-soft)}
   .sub .sx{border:none;background:transparent;color:var(--dusk-soft);cursor:pointer;font-size:15px;width:22px;height:22px;border-radius:7px}
   .sub .sx:hover{background:rgba(231,154,138,.2);color:var(--accent-dp)}
@@ -201,7 +199,7 @@
   .sub-add input{flex:1}
 
   .btn-row{display:flex;gap:10px;margin-top:22px}
-  .btn{flex:1;border:none;border-radius:16px;padding:13px;font-family:'Quicksand';font-weight:700;font-size:15px;
+  .btn{flex:1;border:none;border-radius:16px;padding:13px;font-family:'Roboto',Arial,sans-serif;font-weight:700;font-size:15px;
     cursor:pointer;transition:.15s}
   .btn.save{background:linear-gradient(135deg,var(--accent),var(--accent-dp));color:#fff;box-shadow:0 6px 18px rgba(231,154,138,.4)}
   .btn.save:hover{filter:brightness(1.06);transform:translateY(-1px)}
@@ -271,7 +269,6 @@
  </g>
 </svg>
     <div class="top-spacer"></div>
-    <div class="clock" id="clk"></div>
   </header>
 
   <nav class="tabs">
@@ -329,6 +326,9 @@
       <select id="pRubric" style="flex:1;min-width:130px"></select>
       <input id="pNewRubric" placeholder="или новая…" style="flex:1;min-width:110px">
     </div>
+    <label class="f">Формат</label>
+    <div class="chansel" id="pFormats"></div>
+    <input id="pNewFormat" placeholder="+ свой формат…">
     <label class="f">Дата поста</label>
     <input type="date" id="pDate">
     <label class="f">Подзадачи</label>
@@ -384,6 +384,7 @@
 const CHANNELS = ['Telegram','VK','Instagram','MAX','VC','Дзен','YouTube','Сайт','Рассылка','Другое'];
 function c(){return 'id'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
 const RUB_COLORS=['#7fb5a3','#e8a06a','#e3c25f','#7f9fd0','#d78fa5','#f0d98a','#d97b6c','#c9b6d9','#8fbf8f','#9dc8c0'];
+function defFormats(){return ['reels','пост','сторис','карточки','док','статья','опрос','кружочек','видео/гифка']}
 function defRubrics(){return [
   {id:'rb-product',name:'Продукт',color:'#7fb5a3'},
   {id:'rb-polza',name:'Польза',color:'#e8a06a'},
@@ -398,10 +399,12 @@ function defRubrics(){return [
 function normalizeState(s){
   if(!s)return s;
   if(!s.rubrics||!s.rubrics.length)s.rubrics=defRubrics();
+  if(!s.formats||!s.formats.length)s.formats=defFormats();
   (s.posts||[]).forEach(p=>{
     if(!p.chans)p.chans=p.chan?[p.chan]:[];
     delete p.chan;
     if(p.rubric===undefined)p.rubric='';
+    if(!p.formats)p.formats=[];
   });
   return s;
 }
@@ -519,6 +522,7 @@ function postCard(p){
   let meta='';const rb=state.rubrics.find(r=>r.id===p.rubric);
   if(rb)meta+=`<span class="chip" style="background:${rb.color};color:#fff">#${esc(rb.name)}</span>`;
   (p.chans||[]).forEach(ch=>meta+=`<span class="chip chan">${esc(ch)}</span>`);
+  (p.formats||[]).forEach(f=>meta+=`<span class="chip" style="background:rgba(240,205,178,.5);color:#8a6a4f">${esc(f)}</span>`);
   if(p.date)meta+=dueChip(p.date);
   if(p.subs&&p.subs.length){const dn=p.subs.filter(s=>s.done).length;meta+=`<span class="chip subs">✓ ${dn}/${p.subs.length}</span>`}
   d.innerHTML=`<span class="postflag">★</span><div class="card-title">${esc(p.name)}</div>
@@ -593,17 +597,22 @@ function fillChans(box,selected){box.innerHTML='';const sel=new Set(selected||[]
     b.className='chbtn'+(sel.has(ch)?' on':'');b.innerText=ch;
     b.onclick=()=>b.classList.toggle('on');box.appendChild(b)})}
 function readChans(){return [...document.querySelectorAll('#pChans .chbtn.on')].map(b=>b.innerText)}
+function fillFormats(box,selected){box.innerHTML='';const sel=new Set(selected||[]);
+  state.formats.forEach(f=>{const b=document.createElement('button');b.type='button';
+    b.className='chbtn'+(sel.has(f)?' on':'');b.innerText=f;
+    b.onclick=()=>b.classList.toggle('on');box.appendChild(b)})}
+function readFormats(){return [...document.querySelectorAll('#pFormats .chbtn.on')].map(b=>b.innerText)}
 function fillRubrics(sel,val){sel.innerHTML='<option value="">— рубрика —</option>'+
   state.rubrics.map(r=>`<option value="${r.id}" ${r.id===val?'selected':''}>#${esc(r.name)}</option>`).join('')}
 function openPost(id,col,date){
   editPostId=id;newPostCol=col;
   if(id){const p=state.posts.find(x=>x.id===id);document.getElementById('postTitle').innerText='Пост';
     document.getElementById('pName').value=p.name;document.getElementById('pDesc').value=p.desc||'';
-    fillChans(document.getElementById('pChans'),p.chans||[]);fillRubrics(document.getElementById('pRubric'),p.rubric||'');document.getElementById('pNewRubric').value='';document.getElementById('pDate').value=p.date||'';
+    fillChans(document.getElementById('pChans'),p.chans||[]);fillRubrics(document.getElementById('pRubric'),p.rubric||'');document.getElementById('pNewRubric').value='';fillFormats(document.getElementById('pFormats'),p.formats||[]);document.getElementById('pNewFormat').value='';document.getElementById('pDate').value=p.date||'';
     draftSubs=JSON.parse(JSON.stringify(p.subs||[]));document.getElementById('pDel').style.display='block';
   }else{document.getElementById('postTitle').innerText='Новый пост';
     document.getElementById('pName').value='';document.getElementById('pDesc').value='';
-    fillChans(document.getElementById('pChans'),[]);fillRubrics(document.getElementById('pRubric'),'');document.getElementById('pNewRubric').value='';document.getElementById('pDate').value=date||'';
+    fillChans(document.getElementById('pChans'),[]);fillRubrics(document.getElementById('pRubric'),'');document.getElementById('pNewRubric').value='';fillFormats(document.getElementById('pFormats'),[]);document.getElementById('pNewFormat').value='';document.getElementById('pDate').value=date||'';
     draftSubs=[];document.getElementById('pDel').style.display='none';}
   renderDraftSubs();document.getElementById('ovPost').classList.add('on');
   setTimeout(()=>document.getElementById('pName').focus(),50);
@@ -624,8 +633,11 @@ function savePost(){
   if(nr){const ex=state.rubrics.find(r=>r.name.toLowerCase()===nr.toLowerCase());
     if(ex)rubric=ex.id;
     else{const nid='rb'+c().slice(2);state.rubrics.push({id:nid,name:nr,color:RUB_COLORS[state.rubrics.length%RUB_COLORS.length]});rubric=nid}}
-  if(editPostId){const p=state.posts.find(x=>x.id===editPostId);p.name=name;p.desc=desc;p.chans=chans;p.rubric=rubric;p.date=date;p.subs=draftSubs;}
-  else{const col=newPostCol||(state.devCols[0]&&state.devCols[0].id);state.posts.push({id:c(),name,desc,chans,rubric,date,col,subs:draftSubs})}
+  let formats=readFormats();
+  const nf=document.getElementById('pNewFormat').value.trim();
+  if(nf){if(!state.formats.includes(nf))state.formats.push(nf);if(!formats.includes(nf))formats.push(nf)}
+  if(editPostId){const p=state.posts.find(x=>x.id===editPostId);p.name=name;p.desc=desc;p.chans=chans;p.rubric=rubric;p.formats=formats;p.date=date;p.subs=draftSubs;}
+  else{const col=newPostCol||(state.devCols[0]&&state.devCols[0].id);state.posts.push({id:c(),name,desc,chans,rubric,formats,date,col,subs:draftSubs})}
   save();closeOv('ovPost');renderCal();renderDev();
 }
 function deletePost(){if(!confirm('Удалить пост? Он исчезнет и из календаря, и из доски.'))return;
@@ -693,9 +705,6 @@ function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>'
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'))});
 
-function tick(){const d=new Date();document.getElementById('clk').innerText=
-  String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
-tick();setInterval(tick,1000);
 renderCal();
 </script>
 </body>
