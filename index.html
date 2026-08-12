@@ -50,6 +50,21 @@
   .logo{height:58px;width:auto;flex:none;color:var(--cloud);
     filter:drop-shadow(0 3px 14px rgba(61,90,138,.5)) drop-shadow(0 0 2px rgba(61,90,138,.4))}
   .top-spacer{flex:1}
+  .sync{font-family:'Roboto',Arial,sans-serif;font-size:11px;font-weight:700;color:var(--dusk);
+    background:rgba(248,244,246,.6);border:1.5px solid rgba(255,255,255,.6);border-radius:20px;padding:5px 12px}
+  .sync.ok{color:#4a7a5c;border-color:rgba(125,154,134,.6)}
+  .sync.warn{color:#a8722f;border-color:rgba(216,164,95,.7);background:rgba(255,247,235,.75)}
+  .sync.bad{color:#fff;background:var(--accent-dp);border-color:transparent}
+  .tool{font-family:'Roboto',Arial,sans-serif;font-size:12px;font-weight:700;color:var(--dusk);cursor:pointer;
+    background:rgba(248,244,246,.6);border:1.5px solid rgba(255,255,255,.6);border-radius:20px;padding:6px 13px;transition:.2s}
+  .tool:hover{background:rgba(248,244,246,.95)}
+  #conflictBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 0;
+    background:rgba(255,240,230,.95);border:2px solid var(--accent);border-radius:18px;padding:12px 16px;
+    font-family:'Roboto',Arial,sans-serif;font-size:13px;font-weight:600;color:var(--ink)}
+  .hist-h{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:var(--dusk-soft);
+    margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+  .hist-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;
+    border-bottom:1px solid rgba(135,144,172,.2);font-size:14px}
 
   /* вкладки */
   .tabs{display:flex;gap:10px;margin:24px 0 24px;flex-wrap:wrap}
@@ -132,6 +147,9 @@
     color:var(--ink);transition:.15s;word-break:break-word;background:rgba(169,180,208,.22);
     border-left:3px solid var(--dusk-soft)}
   .post:hover{background:rgba(169,180,208,.34);transform:translateX(1px)}
+  .post{cursor:grab}
+  .post.dragging{opacity:.4}
+  .day.dayover{background:rgba(231,154,138,.28);border:2px dashed var(--accent)}
   .post.st-done{border-left-color:var(--oxide)}
   .post.st-work{border-left-color:var(--amber)}
   .post.st-idea{border-left-color:var(--dusk-soft)}
@@ -269,7 +287,17 @@
  </g>
 </svg>
     <div class="top-spacer"></div>
+    <div class="sync" id="syncBadge">…</div>
+    <button class="tool" onclick="openHistory()">История</button>
+    <button class="tool" onclick="exportJSON()">Скачать копию</button>
+    <button class="tool" onclick="document.getElementById('importFile').click()">Из файла</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
   </header>
+  <div id="conflictBar" style="display:none">
+    <span>⚠ Пока тебя не было, планер изменили на другом устройстве. Что делать?</span>
+    <button class="tool" onclick="conflictTakeCloud()">Взять версию из облака</button>
+    <button class="tool" onclick="conflictKeepMine()">Оставить мою</button>
+  </div>
 
   <nav class="tabs">
     <button id="tabPlan" class="on" onclick="setTab('plan')">Контент-план</button>
@@ -329,6 +357,8 @@
     <label class="f">Формат</label>
     <div class="chansel" id="pFormats"></div>
     <input id="pNewFormat" placeholder="+ свой формат…">
+    <label class="f">Этап</label>
+    <select id="pCol"></select>
     <label class="f">Дата поста</label>
     <input type="date" id="pDate">
     <label class="f">Подзадачи</label>
@@ -360,6 +390,16 @@
       <button class="btn del" id="kDel" onclick="deleteTask()">Удалить</button>
       <button class="btn save" onclick="saveTask()">Сохранить</button>
     </div>
+  </div>
+</div>
+
+<!-- модалка истории -->
+<div class="ov" id="ovHist">
+  <div class="modal">
+    <h3>История версий</h3>
+    <div style="font-size:13px;color:var(--dusk-soft);line-height:1.45">Снимки сохраняются автоматически. Восстановление ничего не удаляет — текущая версия тоже уйдёт в историю.</div>
+    <div id="histList"></div>
+    <div class="btn-row"><button class="btn save" onclick="closeOv('ovHist')">Закрыть</button></div>
   </div>
 </div>
 
@@ -424,35 +464,172 @@ function defMats(){return[
 let state = normalizeState(load() || {devCols:defDevCols(),posts:[],taskCols:defTaskCols(),tasks:[],mats:defMats()});
 state.devCols=state.devCols||defDevCols();state.posts=state.posts||[];
 state.taskCols=state.taskCols||defTaskCols();state.tasks=state.tasks||[];state.mats=state.mats||defMats();
-/* ── Хранилище: localStorage + Supabase ── */
+/* ── Хранилище v7: без затираний, с историей ── */
 const SB_URL = "https://jjkysewwwqpsnttnqbzb.supabase.co";
 const SB_KEY = "sb_publishable_lU-nlWKkQDCcKzFXo_EoeQ_FKRBD8qI";
 const SB_HEADERS = { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json" };
-let cloudTimer = null;
-function saveCloud(){
-  clearTimeout(cloudTimer);
-  cloudTimer = setTimeout(function(){
-    fetch(SB_URL + "/rest/v1/planner_data?id=eq.rin", {
-      method: "PATCH",
-      headers: Object.assign({}, SB_HEADERS, { "Prefer": "return=minimal" }),
-      body: JSON.stringify({ data: state, updated_at: new Date().toISOString() })
-    }).catch(function(e){ console.error("cloud save:", e); });
-  }, 800);
+const ROW = SB_URL + "/rest/v1/planner_data?id=eq.rin";
+const HISTURL = SB_URL + "/rest/v1/planner_history";
+
+let cloudReady=false, remoteStamp=null, saveTimer=null, dirty=false, lastHist=0, lastLocalHist=0;
+
+function renderAll(){renderCal();renderDev();renderTask();renderMat()}
+function setSync(txt,cls){const b=document.getElementById('syncBadge');if(b){b.innerText=txt;b.className='sync '+(cls||'')}}
+
+/* локальная история — кольцо из 8 снимков в браузере */
+function pushLocal(note,force){
+  if(!force && Date.now()-lastLocalHist<60000) return;
+  lastLocalHist=Date.now();
+  try{
+    const h=JSON.parse(localStorage.getItem('getit_hist')||'[]');
+    h.unshift({t:Date.now(),note:note,n:(state.posts||[]).length,data:state});
+    while(h.length>8)h.pop();
+    localStorage.setItem('getit_hist',JSON.stringify(h));
+  }catch(e){try{localStorage.setItem('getit_hist','[]')}catch(_){}}
 }
-function save(){localStorage.setItem('getit_sky',JSON.stringify(state));saveCloud()}
 function load(){try{return JSON.parse(localStorage.getItem('getit_sky'))}catch(e){return null}}
-function loadCloud(){
-  fetch(SB_URL + "/rest/v1/planner_data?id=eq.rin&select=data", { headers: SB_HEADERS })
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(rows){
-      if (rows && rows.length > 0 && rows[0].data && rows[0].data.posts) {
-        state = normalizeState(rows[0].data);
-        localStorage.setItem('getit_sky', JSON.stringify(state));
-        renderCal(); renderDev(); renderTask(); renderMat();
-      }
-    })
-    .catch(function(e){ console.error("cloud load:", e); });
+function save(){
+  localStorage.setItem('getit_sky',JSON.stringify(state));
+  pushLocal('правка');
+  dirty=true;setSync('сохраняю…','');
+  clearTimeout(saveTimer);saveTimer=setTimeout(saveCloud,1200);
 }
+
+/* запись в облако: только если убедились, что там ничего не изменилось */
+function saveCloud(){
+  if(!cloudReady){setSync('только на этом устройстве','warn');return}
+  fetch(ROW+"&select=updated_at",{headers:SB_HEADERS,cache:'no-store'})
+   .then(r=>r.ok?r.json():Promise.reject(0))
+   .then(rows=>{
+      const cur=rows&&rows[0]?rows[0].updated_at:null;
+      if(remoteStamp&&cur&&cur!==remoteStamp){showConflict();return null}
+      return fetch(ROW,{method:'PATCH',headers:Object.assign({},SB_HEADERS,{'Prefer':'return=representation'}),
+        body:JSON.stringify({data:state,updated_at:new Date().toISOString()})}).then(r=>r.json());
+   })
+   .then(back=>{
+      if(!back)return;
+      if(back[0]&&back[0].updated_at)remoteStamp=back[0].updated_at;
+      dirty=false;setSync('сохранено в облаке','ok');
+      pushCloudHistory();
+   })
+   .catch(()=>{setSync('нет связи — правки только тут','warn')});
+}
+
+/* чтение из облака: никогда не затирает несохранённые правки */
+function loadCloud(){
+  return fetch(ROW+"&select=data,updated_at",{headers:SB_HEADERS,cache:'no-store'})
+   .then(r=>r.ok?r.json():Promise.reject(0))
+   .then(rows=>{
+      if(!rows||!rows[0])return;
+      const fresh=rows[0].updated_at;
+      if(dirty){cloudReady=true;if(remoteStamp&&fresh!==remoteStamp){showConflict()}return}
+      remoteStamp=fresh;
+      if(rows[0].data&&rows[0].data.posts){
+        state=normalizeState(rows[0].data);
+        localStorage.setItem('getit_sky',JSON.stringify(state));
+        pushLocal('из облака',true);renderAll();
+      }
+      cloudReady=true;setSync('синхронизировано','ok');
+   })
+   .catch(()=>{cloudReady=false;setSync('нет связи с облаком','warn')});
+}
+
+/* снимки в облаке — не чаще раза в 2 минуты */
+function pushCloudHistory(){
+  if(Date.now()-lastHist<120000)return;
+  lastHist=Date.now();
+  fetch(HISTURL,{method:'POST',headers:Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'}),
+    body:JSON.stringify({data:state})}).catch(()=>{});
+}
+
+/* конфликт: две версии — решает человек, ничего не пропадает */
+function showConflict(){
+  setSync('облако изменилось','bad');
+  const el=document.getElementById('conflictBar');if(el)el.style.display='flex';
+}
+function conflictTakeCloud(){
+  pushLocal('моя версия перед заменой',true);
+  dirty=false;document.getElementById('conflictBar').style.display='none';
+  loadCloud();
+}
+function conflictKeepMine(){
+  fetch(ROW+"&select=data,updated_at",{headers:SB_HEADERS,cache:'no-store'})
+   .then(r=>r.json()).then(rows=>{
+      if(rows&&rows[0]){
+        try{const h=JSON.parse(localStorage.getItem('getit_hist')||'[]');
+          h.unshift({t:Date.now(),note:'облачная версия перед перезаписью',n:(rows[0].data.posts||[]).length,data:rows[0].data});
+          while(h.length>8)h.pop();localStorage.setItem('getit_hist',JSON.stringify(h))}catch(e){}
+        remoteStamp=rows[0].updated_at;
+      }
+      document.getElementById('conflictBar').style.display='none';
+      saveCloud();
+   });
+}
+
+/* восстановление */
+function openHistory(){
+  const box=document.getElementById('histList');
+  box.innerHTML='<div style="color:var(--dusk-soft);font-size:13px">Загружаю…</div>';
+  document.getElementById('ovHist').classList.add('on');
+  const loc=(()=>{try{return JSON.parse(localStorage.getItem('getit_hist')||'[]')}catch(e){return[]}})();
+  let html='';
+  if(loc.length){html+='<div class="hist-h">На этом устройстве</div>';
+    loc.forEach((s,i)=>{html+=histRow(new Date(s.t).toLocaleString('ru-RU'),s.note+' · '+s.n+' постов','local',i)})}
+  fetch(HISTURL+"?select=id,created_at,data&order=created_at.desc&limit=40",{headers:SB_HEADERS,cache:'no-store'})
+   .then(r=>r.ok?r.json():[])
+   .then(rows=>{
+      if(rows&&rows.length){html+='<div class="hist-h">Снимки в облаке</div>';
+        rows.forEach(s=>{const n=(s.data&&s.data.posts?s.data.posts.length:0);
+          html+=histRow(new Date(s.created_at).toLocaleString('ru-RU'),n+' постов','cloud',s.id)})}
+      else if(!loc.length){html='<div style="color:var(--dusk-soft);font-size:13px">Снимков пока нет — они появятся после ближайших правок.</div>'}
+      box.innerHTML=html;
+   }).catch(()=>{box.innerHTML=html||'<div style="color:var(--dusk-soft)">Снимков нет</div>'});
+}
+function histRow(when,what,kind,id){
+  return '<div class="hist-row"><div><b>'+when+'</b><div style="font-size:12px;color:var(--dusk-soft)">'+what+'</div></div>'+
+    '<button class="btn save" style="flex:none;padding:8px 14px;font-size:13px" onclick="restoreFrom(\''+kind+'\',\''+id+'\')">Восстановить</button></div>';
+}
+function restoreFrom(kind,id){
+  if(!confirm('Восстановить эту версию? Текущая сохранится в истории, её можно будет вернуть.'))return;
+  pushLocal('перед восстановлением',true);
+  if(kind==='local'){
+    const h=JSON.parse(localStorage.getItem('getit_hist')||'[]');
+    const s=h[parseInt(id)];if(!s)return;
+    state=normalizeState(s.data);applyRestored();
+  }else{
+    fetch(HISTURL+"?id=eq."+id+"&select=data",{headers:SB_HEADERS,cache:'no-store'})
+     .then(r=>r.json()).then(rows=>{if(rows&&rows[0]){state=normalizeState(rows[0].data);applyRestored()}});
+  }
+}
+function applyRestored(){
+  localStorage.setItem('getit_sky',JSON.stringify(state));
+  renderAll();closeOv('ovHist');
+  dirty=true;saveCloud();
+}
+
+/* файл-копия */
+function exportJSON(){
+  const b=new Blob([JSON.stringify(state,null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='planner-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function importJSON(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{
+      const d=JSON.parse(rd.result);
+      if(!d.posts){alert('Это не похоже на копию планера');return}
+      if(!confirm('Заменить текущие данные содержимым файла? Текущее уйдёт в историю.'))return;
+      pushLocal('перед загрузкой из файла',true);
+      state=normalizeState(d);applyRestored();
+    }catch(e){alert('Файл не читается')}};
+  rd.readAsText(f);ev.target.value='';
+}
+
+/* пересинхронизация при возвращении в приложение */
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadCloud()});
+window.addEventListener('focus',()=>loadCloud());
+window.addEventListener('online',()=>loadCloud());
 loadCloud();
 
 function setTab(t){
@@ -491,7 +668,15 @@ function renderCal(){
       const rb=state.rubrics.find(r=>r.id===p.rubric);
       pv.innerHTML=`<span class="ptype">${chs} · ${esc(col?col.name:'')}</span>${esc(p.name)}`;
       if(rb){pv.style.background=rb.color+'66';pv.style.borderLeft='3px solid '+rb.color}
-      pv.onclick=()=>openPost(p.id,null,key);el.appendChild(pv)});
+      pv.draggable=true;
+      pv.addEventListener('dragstart',e=>{e.dataTransfer.setData('postid',p.id);pv.classList.add('dragging')});
+      pv.addEventListener('dragend',()=>{pv.classList.remove('dragging')});
+      pv.onclick=()=>{if(!pv.classList.contains('dragging'))openPost(p.id,null,key)};el.appendChild(pv)});
+    el.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('postid')){e.preventDefault();el.classList.add('dayover')}});
+    el.addEventListener('dragleave',()=>el.classList.remove('dayover'));
+    el.addEventListener('drop',e=>{el.classList.remove('dayover');
+      const pid=e.dataTransfer.getData('postid');if(!pid)return;e.preventDefault();
+      const p=state.posts.find(x=>x.id===pid);if(p&&p.date!==key){p.date=key;save();renderCal();renderDev()}});
     const add=document.createElement('button');add.className='day-add';add.innerText='＋ пост';
     add.onclick=()=>openPost(null,null,key);el.appendChild(add);cal.appendChild(el);
   }
@@ -602,17 +787,18 @@ function fillFormats(box,selected){box.innerHTML='';const sel=new Set(selected||
     b.className='chbtn'+(sel.has(f)?' on':'');b.innerText=f;
     b.onclick=()=>b.classList.toggle('on');box.appendChild(b)})}
 function readFormats(){return [...document.querySelectorAll('#pFormats .chbtn.on')].map(b=>b.innerText)}
+function fillCols(sel,val){sel.innerHTML=state.devCols.map(c=>`<option value="${c.id}" ${c.id===val?'selected':''}>${esc(c.name)}</option>`).join('')}
 function fillRubrics(sel,val){sel.innerHTML='<option value="">— рубрика —</option>'+
   state.rubrics.map(r=>`<option value="${r.id}" ${r.id===val?'selected':''}>#${esc(r.name)}</option>`).join('')}
 function openPost(id,col,date){
   editPostId=id;newPostCol=col;
   if(id){const p=state.posts.find(x=>x.id===id);document.getElementById('postTitle').innerText='Пост';
     document.getElementById('pName').value=p.name;document.getElementById('pDesc').value=p.desc||'';
-    fillChans(document.getElementById('pChans'),p.chans||[]);fillRubrics(document.getElementById('pRubric'),p.rubric||'');document.getElementById('pNewRubric').value='';fillFormats(document.getElementById('pFormats'),p.formats||[]);document.getElementById('pNewFormat').value='';document.getElementById('pDate').value=p.date||'';
+    fillCols(document.getElementById('pCol'),p.col);fillChans(document.getElementById('pChans'),p.chans||[]);fillRubrics(document.getElementById('pRubric'),p.rubric||'');document.getElementById('pNewRubric').value='';fillFormats(document.getElementById('pFormats'),p.formats||[]);document.getElementById('pNewFormat').value='';document.getElementById('pDate').value=p.date||'';
     draftSubs=JSON.parse(JSON.stringify(p.subs||[]));document.getElementById('pDel').style.display='block';
   }else{document.getElementById('postTitle').innerText='Новый пост';
     document.getElementById('pName').value='';document.getElementById('pDesc').value='';
-    fillChans(document.getElementById('pChans'),[]);fillRubrics(document.getElementById('pRubric'),'');document.getElementById('pNewRubric').value='';fillFormats(document.getElementById('pFormats'),[]);document.getElementById('pNewFormat').value='';document.getElementById('pDate').value=date||'';
+    fillCols(document.getElementById('pCol'),col||(state.devCols[0]&&state.devCols[0].id));fillChans(document.getElementById('pChans'),[]);fillRubrics(document.getElementById('pRubric'),'');document.getElementById('pNewRubric').value='';fillFormats(document.getElementById('pFormats'),[]);document.getElementById('pNewFormat').value='';document.getElementById('pDate').value=date||'';
     draftSubs=[];document.getElementById('pDel').style.display='none';}
   renderDraftSubs();document.getElementById('ovPost').classList.add('on');
   setTimeout(()=>document.getElementById('pName').focus(),50);
@@ -636,8 +822,9 @@ function savePost(){
   let formats=readFormats();
   const nf=document.getElementById('pNewFormat').value.trim();
   if(nf){if(!state.formats.includes(nf))state.formats.push(nf);if(!formats.includes(nf))formats.push(nf)}
-  if(editPostId){const p=state.posts.find(x=>x.id===editPostId);p.name=name;p.desc=desc;p.chans=chans;p.rubric=rubric;p.formats=formats;p.date=date;p.subs=draftSubs;}
-  else{const col=newPostCol||(state.devCols[0]&&state.devCols[0].id);state.posts.push({id:c(),name,desc,chans,rubric,formats,date,col,subs:draftSubs})}
+  const pcol=document.getElementById('pCol').value||newPostCol||(state.devCols[0]&&state.devCols[0].id);
+  if(editPostId){const p=state.posts.find(x=>x.id===editPostId);p.name=name;p.desc=desc;p.chans=chans;p.rubric=rubric;p.formats=formats;p.date=date;p.col=pcol;p.subs=draftSubs;}
+  else{state.posts.push({id:c(),name,desc,chans,rubric,formats,date,col:pcol,subs:draftSubs})}
   save();closeOv('ovPost');renderCal();renderDev();
 }
 function deletePost(){if(!confirm('Удалить пост? Он исчезнет и из календаря, и из доски.'))return;
