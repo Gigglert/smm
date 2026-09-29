@@ -117,6 +117,26 @@
   .chip.due.soon{background:rgba(216,164,95,.22);color:#b07d30}
   .chip.due.over{background:rgba(231,154,138,.24);color:var(--accent-dp)}
   .postflag{position:absolute;top:9px;right:11px;font-family:'Montserrat',sans-serif;font-size:14px;color:var(--accent);opacity:.75}
+  /* просроченная задача — вся карточка кричит красным */
+  .card.overdue{background:#e0483f;border-color:#c1352d;box-shadow:0 8px 22px rgba(224,72,63,.45)}
+  .card.overdue .card-title,.card.overdue .card-desc{color:#fff}
+  .card.overdue .card-desc{opacity:.92}
+  .card.overdue .chip{background:rgba(255,255,255,.22);color:#fff;border-color:rgba(255,255,255,.4)}
+  .card.overdue .chip.due{background:#fff;color:#c1352d;font-weight:800}
+  .card.overdue:hover{transform:translateY(-3px) rotate(-.4deg);box-shadow:0 14px 30px rgba(224,72,63,.55)}
+  /* панель спринтов */
+  .sprint-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;
+    background:rgba(248,244,246,.6);border:2px solid rgba(255,255,255,.7);border-radius:20px;padding:9px 12px;box-shadow:var(--shadow-sm)}
+  .sprint-lbl{font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;color:var(--dusk-soft);
+    text-transform:uppercase;letter-spacing:.5px;margin-right:2px}
+  .spbtn{border:1.5px solid rgba(61,90,138,.3);background:rgba(255,255,255,.6);color:var(--dusk);border-radius:20px;
+    padding:5px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Roboto',Arial,sans-serif;transition:.15s}
+  .spbtn:hover{background:rgba(255,255,255,.9)}
+  .spbtn.on{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
+  .spbtn.add{border-style:dashed;color:var(--accent-dp);border-color:rgba(231,154,138,.5)}
+  .spbtn.add:hover{background:rgba(231,154,138,.12)}
+  .sp-edit{border:none;background:transparent;color:var(--dusk-soft);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:8px}
+  .sp-edit:hover{background:rgba(231,154,138,.18);color:var(--accent-dp)}
   .addcard{width:100%;border:2px dashed rgba(231,154,138,.4);background:transparent;color:var(--accent-dp);
     font-family:'Roboto',Arial,sans-serif;font-weight:700;font-size:13px;cursor:pointer;padding:9px;border-radius:16px;transition:.2s}
   .addcard:hover{background:rgba(248,244,246,.55)}
@@ -334,7 +354,8 @@
   </section>
 
   <section id="viewTask" style="display:none">
-    <h2 class="sec">Доска задач <span class="hint">// заголовок · описание · дедлайн · тег</span></h2>
+    <h2 class="sec">Доска задач <span class="hint">// спринты · подзадачи · просрочка светит красным</span></h2>
+    <div class="sprint-bar" id="sprintBar"></div>
     <div class="board" id="taskBoard"></div>
   </section>
 </div>
@@ -386,6 +407,14 @@
     <input type="date" id="kDue">
     <label class="f">Тег</label>
     <input type="text" id="kTag" placeholder="напр. срочно / smm / дизайн">
+    <label class="f">Спринт</label>
+    <select id="kSprint"></select>
+    <label class="f">Подзадачи</label>
+    <div class="subs" id="kSubs"></div>
+    <div class="sub-add">
+      <input type="text" id="kSubNew" placeholder="добавить шаг…" onkeydown="if(event.key==='Enter')addTaskSub()">
+      <button class="plus" onclick="addTaskSub()">＋</button>
+    </div>
     <div class="btn-row">
       <button class="btn del" id="kDel" onclick="deleteTask()">Удалить</button>
       <button class="btn save" onclick="saveTask()">Сохранить</button>
@@ -436,15 +465,22 @@ function defRubrics(){return [
   {id:'rb-comm',name:'Коммьюнити',color:'#c9b6d9'},
   {id:'rb-interview',name:'Интервью',color:'#8fbf8f'},
   {id:'rb-team',name:'Команда',color:'#9dc8c0'}]}
+function defSprints(){return[{id:'sp-backlog',name:'Бэклог'}]}
 function normalizeState(s){
   if(!s)return s;
   if(!s.rubrics||!s.rubrics.length)s.rubrics=defRubrics();
   if(!s.formats||!s.formats.length)s.formats=defFormats();
+  if(!s.sprints||!s.sprints.length)s.sprints=defSprints();
+  if(!s.activeSprint||!s.sprints.find(x=>x.id===s.activeSprint))s.activeSprint=s.sprints[0].id;
   (s.posts||[]).forEach(p=>{
     if(!p.chans)p.chans=p.chan?[p.chan]:[];
     delete p.chan;
     if(p.rubric===undefined)p.rubric='';
     if(!p.formats)p.formats=[];
+  });
+  (s.tasks||[]).forEach(t=>{
+    if(!t.subs)t.subs=[];
+    if(t.sprint===undefined||!s.sprints.find(x=>x.id===t.sprint))t.sprint=s.sprints[0].id;
   });
   return s;
 }
@@ -715,10 +751,47 @@ function postCard(p){
   return d;
 }
 
+function renderSprintBar(){
+  const bar=document.getElementById('sprintBar');if(!bar)return;
+  bar.innerHTML='<span class="sprint-lbl">Спринт</span>';
+  state.sprints.forEach(sp=>{
+    const b=document.createElement('button');b.className='spbtn'+(sp.id===state.activeSprint?' on':'');
+    const cnt=state.tasks.filter(t=>t.sprint===sp.id).length;
+    b.innerText=sp.name+(cnt?' · '+cnt:'');
+    b.onclick=()=>{state.activeSprint=sp.id;save();renderTask()};
+    bar.appendChild(b);
+  });
+  const edit=document.createElement('button');edit.className='sp-edit';edit.innerText='✎';edit.title='переименовать / удалить активный спринт';
+  edit.onclick=editActiveSprint;bar.appendChild(edit);
+  const add=document.createElement('button');add.className='spbtn add';add.innerText='＋ спринт';
+  add.onclick=addSprint;bar.appendChild(add);
+}
+function addSprint(){
+  const name=prompt('Название спринта:','Спринт '+(state.sprints.length+1));
+  if(!name||!name.trim())return;
+  const id='sp'+c().slice(2);state.sprints.push({id,name:name.trim()});state.activeSprint=id;
+  save();renderTask();
+}
+function editActiveSprint(){
+  const sp=state.sprints.find(x=>x.id===state.activeSprint);if(!sp)return;
+  const name=prompt('Переименовать спринт (пустое поле — удалить спринт):',sp.name);
+  if(name===null)return;
+  if(!name.trim()){
+    if(state.sprints.length<=1){alert('Нельзя удалить единственный спринт');return}
+    const cnt=state.tasks.filter(t=>t.sprint===sp.id).length;
+    if(cnt&&!confirm('В спринте «'+sp.name+'» '+cnt+' задач(и). Удалить спринт? Задачи переедут в первый оставшийся спринт.'))return;
+    state.sprints=state.sprints.filter(x=>x.id!==sp.id);
+    const fallback=state.sprints[0].id;
+    state.tasks.forEach(t=>{if(t.sprint===sp.id)t.sprint=fallback});
+    state.activeSprint=fallback;
+  }else{sp.name=name.trim()}
+  save();renderTask();
+}
 function renderTask(){
+  renderSprintBar();
   const b=document.getElementById('taskBoard');b.innerHTML='';
   state.taskCols.forEach(col=>{
-    const tasks=state.tasks.filter(t=>t.col===col.id);const el=document.createElement('div');el.className='col';
+    const tasks=state.tasks.filter(t=>t.col===col.id&&t.sprint===state.activeSprint);const el=document.createElement('div');el.className='col';
     el.innerHTML=`<div class="col-head">
       <span class="grip" draggable="true" ondragstart="colDragStart(event,'task','${col.id}')">⠿</span>
       <div class="col-title" contenteditable="true" spellcheck="false" onblur="renameCol('task','${col.id}',this.innerText)"
@@ -734,10 +807,13 @@ function renderTask(){
 }
 function taskCard(t){
   const d=document.createElement('div');d.className='card';d.draggable=true;
+  const done=colStatus((state.taskCols.find(x=>x.id===t.col)||{}).name)==='done';
+  if(t.due&&!done&&daysLeft(t.due)<0)d.classList.add('overdue');
   d.addEventListener('dragstart',e=>{e.dataTransfer.setData('id',t.id);d.classList.add('dragging')});
   d.addEventListener('dragend',()=>d.classList.remove('dragging'));
   d.onclick=()=>{if(!d.classList.contains('dragging'))openTask(t.id)};
   let meta='';if(t.tag)meta+=`<span class="chip tag">${esc(t.tag)}</span>`;if(t.due)meta+=dueChip(t.due);
+  if(t.subs&&t.subs.length){const dn=t.subs.filter(s=>s.done).length;meta+=`<span class="chip subs">✓ ${dn}/${t.subs.length}</span>`}
   d.innerHTML=`<div class="card-title">${esc(t.name)}</div>
     ${t.desc?`<div class="card-desc">${esc(t.desc)}</div>`:''}${meta?`<div class="card-meta">${meta}</div>`:''}`;
   return d;
@@ -830,24 +906,38 @@ function savePost(){
 function deletePost(){if(!confirm('Удалить пост? Он исчезнет и из календаря, и из доски.'))return;
   state.posts=state.posts.filter(x=>x.id!==editPostId);save();closeOv('ovPost');renderCal();renderDev()}
 
-let editTaskId=null,newTaskCol=null;
+let editTaskId=null,newTaskCol=null,draftTaskSubs=[];
+function fillSprints(sel,val){sel.innerHTML=state.sprints.map(sp=>`<option value="${sp.id}" ${sp.id===val?'selected':''}>${esc(sp.name)}</option>`).join('')}
+function renderTaskSubs(){const box=document.getElementById('kSubs');box.innerHTML='';
+  draftTaskSubs.forEach((s,i)=>{const el=document.createElement('div');el.className='sub';
+    el.innerHTML=`<input type="checkbox" ${s.done?'checked':''} onchange="draftTaskSubs[${i}].done=this.checked;renderTaskSubs()">
+      <span class="${s.done?'done':''}">${esc(s.t)}</span>
+      <button class="sx" onclick="draftTaskSubs.splice(${i},1);renderTaskSubs()">✕</button>`;box.appendChild(el)})}
+function addTaskSub(){const inp=document.getElementById('kSubNew');const v=inp.value.trim();
+  if(!v)return;draftTaskSubs.push({t:v,done:false});inp.value='';renderTaskSubs();inp.focus()}
 function openTask(id,col){editTaskId=id;newTaskCol=col;
   if(id){const t=state.tasks.find(x=>x.id===id);document.getElementById('taskTitle').innerText='Карточка';
     document.getElementById('kName').value=t.name;document.getElementById('kDesc').value=t.desc||'';
     document.getElementById('kDue').value=t.due||'';document.getElementById('kTag').value=t.tag||'';
+    fillSprints(document.getElementById('kSprint'),t.sprint||state.activeSprint);
+    draftTaskSubs=JSON.parse(JSON.stringify(t.subs||[]));
     document.getElementById('kDel').style.display='block';
   }else{document.getElementById('taskTitle').innerText='Новая задача';
     document.getElementById('kName').value='';document.getElementById('kDesc').value='';
     document.getElementById('kDue').value='';document.getElementById('kTag').value='';
+    fillSprints(document.getElementById('kSprint'),state.activeSprint);
+    draftTaskSubs=[];
     document.getElementById('kDel').style.display='none';}
+  renderTaskSubs();
   document.getElementById('ovTask').classList.add('on');setTimeout(()=>document.getElementById('kName').focus(),50);
 }
 function saveTask(){
   const name=document.getElementById('kName').value.trim();if(!name){document.getElementById('kName').focus();return}
   const desc=document.getElementById('kDesc').value.trim();const due=document.getElementById('kDue').value;
   const tag=document.getElementById('kTag').value.trim();
-  if(editTaskId){const t=state.tasks.find(x=>x.id===editTaskId);t.name=name;t.desc=desc;t.due=due;t.tag=tag;}
-  else{const col=newTaskCol||(state.taskCols[0]&&state.taskCols[0].id);state.tasks.push({id:c(),name,desc,due,tag,col})}
+  const sprint=document.getElementById('kSprint').value||state.activeSprint;
+  if(editTaskId){const t=state.tasks.find(x=>x.id===editTaskId);t.name=name;t.desc=desc;t.due=due;t.tag=tag;t.sprint=sprint;t.subs=draftTaskSubs;}
+  else{const col=newTaskCol||(state.taskCols[0]&&state.taskCols[0].id);state.tasks.push({id:c(),name,desc,due,tag,col,sprint,subs:draftTaskSubs})}
   save();closeOv('ovTask');renderTask();
 }
 function deleteTask(){if(!confirm('Удалить карточку?'))return;
