@@ -179,7 +179,7 @@
     cursor:pointer;font-size:15px;border-radius:8px;padding:2px;margin-top:auto;transition:.15s}
   .day-add:hover{color:var(--accent-dp)}
 
-  /* материалы */
+  /* ресурсы */
   .mat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
   .mat{background:rgba(248,244,246,.78);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.72);
     border-radius:22px;padding:17px;position:relative;transition:.2s;display:flex;flex-direction:column;gap:8px;
@@ -187,7 +187,7 @@
   .mat:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
   .mat-plat{font-family:'Roboto',Arial,sans-serif;font-size:10px;color:var(--accent-dp);letter-spacing:1.5px;
     text-transform:uppercase;font-weight:700}
-  .mat a.mat-link{font-family:'Montserrat',sans-serif;font-weight:700;font-size:26px;color:var(--dusk);text-decoration:none;
+  .mat .mat-link{font-family:'Montserrat',sans-serif;font-weight:700;font-size:26px;color:var(--dusk);text-decoration:none;
     word-break:break-word;line-height:1.05;transition:.15s}
   .mat a.mat-link:hover{color:var(--accent-dp)}
   .mat-note{font-size:13px;color:var(--dusk-soft);line-height:1.4}
@@ -203,6 +203,47 @@
     font-family:'Montserrat',sans-serif;font-weight:700;font-size:24px;cursor:pointer;min-height:150px;transition:.2s;
     text-shadow:0 1px 6px rgba(61,90,138,.3)}
   .mat-add:hover{background:rgba(248,244,246,.32)}
+
+  /* таблицы: идеи и HADI */
+  .sh-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .sh-lbl{font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;color:var(--dusk-soft);
+    text-transform:uppercase;letter-spacing:.5px;margin-right:2px}
+  .sh-count{font-size:12px;font-weight:700;color:var(--dusk-soft);margin:4px 2px 8px}
+  .sh-wrap{overflow-x:auto;border-radius:18px;background:rgba(255,255,255,.6);border:1.5px solid rgba(135,144,172,.22)}
+  table.sheet{border-collapse:collapse;width:100%}
+  .sheet th{text-align:left;padding:0;border-bottom:2px solid rgba(135,144,172,.28);background:rgba(169,180,208,.18);white-space:nowrap}
+  .sheet th+th,.sheet td+td{border-left:1px solid rgba(135,144,172,.18)}
+  .sheet th.c-text{min-width:220px}
+  .th-btn{width:100%;border:none;background:transparent;text-align:left;padding:10px 12px;cursor:pointer;
+    font-family:'Roboto',Arial,sans-serif;font-weight:700;font-size:12px;color:var(--dusk);text-transform:uppercase;letter-spacing:.4px}
+  .th-btn:hover{background:rgba(231,154,138,.14);color:var(--accent-dp)}
+  .th-btn i{font-style:normal;opacity:.4;margin-left:5px}
+  .th-add{border:none;background:transparent;color:var(--accent-dp);font-weight:700;font-size:17px;cursor:pointer;padding:8px 12px;width:100%}
+  .th-add:hover{background:rgba(231,154,138,.14)}
+  .sheet td{border-bottom:1px solid rgba(135,144,172,.18);padding:4px 6px;vertical-align:top}
+  .sheet tr:hover td{background:rgba(255,255,255,.55)}
+  .sheet td.c-check{text-align:center;vertical-align:middle}
+  .sh-txt{width:100%;min-width:200px;border:none;background:transparent;resize:none;overflow:hidden;display:block;
+    font:500 14px/1.4 'Roboto',Arial,sans-serif;color:var(--ink);padding:6px;border-radius:8px;outline:none}
+  .sh-date,.sh-sel{border:none;background:transparent;font:500 14px 'Roboto',Arial,sans-serif;color:var(--ink);
+    padding:6px;border-radius:8px;outline:none;cursor:pointer;min-width:130px}
+  .sh-txt:focus,.sh-date:focus,.sh-sel:focus{background:#fff;box-shadow:0 0 0 2px rgba(231,154,138,.4)}
+  .sh-sel.ok{color:#4a7a5c;font-weight:700}
+  .sh-sel.no{color:var(--accent-dp);font-weight:700}
+  .ck{appearance:none;-webkit-appearance:none;width:22px;height:22px;border:2px solid var(--accent);border-radius:7px;
+    cursor:pointer;position:relative;background:#fff;vertical-align:middle;margin:5px 0}
+  .ck:checked{background:var(--oxide);border-color:var(--oxide)}
+  .ck:checked::after{content:"✓";position:absolute;color:#fff;font-size:14px;font-weight:700;left:4px;top:0}
+  .rx{border:none;background:transparent;color:var(--dusk-soft);cursor:pointer;font-size:14px;width:26px;height:26px;
+    border-radius:8px;opacity:.5;margin-top:4px}
+  .sheet tr:hover .rx{opacity:1}
+  .rx:hover{background:rgba(231,154,138,.2);color:var(--accent-dp)}
+  .sh-empty{padding:22px!important;text-align:center;color:var(--dusk-soft);font-size:14px}
+  .sh-addrow{margin-top:12px}
+  .rules{margin-top:18px;background:rgba(255,255,255,.6);border:1.5px solid rgba(135,144,172,.22);border-radius:18px;padding:14px 16px}
+  .rules h4{font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:var(--dusk);margin-bottom:8px}
+  .rule{font-size:14px;line-height:1.5;color:var(--ink)}
+  .rule b{color:var(--accent-dp)}
 
   /* модалка */
   .ov{position:fixed;inset:0;background:rgba(61,73,99,.42);backdrop-filter:blur(3px);display:none;
@@ -321,9 +362,11 @@
 
   <nav class="tabs">
     <button id="tabPlan" class="on" onclick="setTab('plan')">Контент-план</button>
-    <button id="tabDev" onclick="setTab('dev')">Разработка контента</button>
-    <button id="tabMat" onclick="setTab('mat')">Материалы</button>
+    <button id="tabIdea" onclick="setTab('idea')">Идеи</button>
+    <button id="tabDev" onclick="setTab('dev')">Разработка контента (стадии)</button>
+    <button id="tabMat" onclick="setTab('mat')">Ресурсы</button>
     <button id="tabTask" onclick="setTab('task')">Доска задач</button>
+    <button id="tabHadi" onclick="setTab('hadi')">Гипотезы по HADI</button>
   </nav>
 
   <section id="viewPlan">
@@ -343,13 +386,18 @@
     <div class="cal" id="cal"></div>
   </section>
 
+  <section id="viewIdea" style="display:none">
+    <h2 class="sec">Идеи <span class="hint">// банк идей · клик по заголовку столбца — переименовать или удалить · ＋ справа — новый столбец</span></h2>
+    <div class="panel"><div id="ideasSheet"></div></div>
+  </section>
+
   <section id="viewDev" style="display:none">
-    <h2 class="sec">Разработка контента <span class="hint">// посты двигаются по этапам · дата поста тянет их в календарь</span></h2>
+    <h2 class="sec">Разработка контента (стадии) <span class="hint">// посты двигаются по этапам · дата поста тянет их в календарь</span></h2>
     <div class="board" id="devBoard"></div>
   </section>
 
   <section id="viewMat" style="display:none">
-    <h2 class="sec">Материалы <span class="hint">// каналы, ресурсы, полезные ссылки</span></h2>
+    <h2 class="sec">Ресурсы <span class="hint">// каналы, ресурсы, полезные ссылки</span></h2>
     <div class="mat-grid" id="matGrid"></div>
   </section>
 
@@ -357,6 +405,20 @@
     <h2 class="sec">Доска задач <span class="hint">// спринты · подзадачи · просрочка светит красным</span></h2>
     <div class="sprint-bar" id="sprintBar"></div>
     <div class="board" id="taskBoard"></div>
+  </section>
+
+  <section id="viewHadi" style="display:none">
+    <h2 class="sec">Гипотезы по HADI <span class="hint">// галка «Архив» — гипотеза уходит в архив · сняла галку в архиве — гипотеза вернулась</span></h2>
+    <div class="panel">
+      <div id="hadiSheet"></div>
+      <div class="rules">
+        <h4>Правила заполнения</h4>
+        <div class="rule"><b>Гипотеза</b> — «Если мы сделаем А, то получим Б»</div>
+        <div class="rule"><b>Действие</b> — что мы делаем для проверки гипотезы</div>
+        <div class="rule"><b>Данные</b> — какие данные собираем</div>
+        <div class="rule"><b>Выводы</b> — какой итог получили</div>
+      </div>
+    </div>
   </section>
 </div>
 
@@ -449,6 +511,30 @@
   </div>
 </div>
 
+<!-- модалка столбца таблицы (идеи / HADI) -->
+<div class="ov" id="ovCol">
+  <div class="modal">
+    <h3 id="colTitle">Новый столбец</h3>
+    <label class="f">Название</label>
+    <input type="text" id="cName" placeholder="напр. Ссылка на референс">
+    <label class="f">Тип</label>
+    <select id="cType" onchange="toggleColOpts()">
+      <option value="text">Текст</option>
+      <option value="check">Чекбокс (галка)</option>
+      <option value="select">Выпадающий список</option>
+      <option value="date">Дата</option>
+    </select>
+    <div id="cOptsBox">
+      <label class="f">Варианты — каждый с новой строки</label>
+      <textarea id="cOpts" placeholder="Вариант 1&#10;Вариант 2"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn del" id="cDel" onclick="deleteSheetCol()">Удалить</button>
+      <button class="btn save" onclick="saveSheetCol()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const CHANNELS = ['Telegram','VK','Instagram','MAX','VC','Дзен','YouTube','Сайт','Рассылка','Другое'];
 function c(){return 'id'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3)}
@@ -466,8 +552,30 @@ function defRubrics(){return [
   {id:'rb-interview',name:'Интервью',color:'#8fbf8f'},
   {id:'rb-team',name:'Команда',color:'#9dc8c0'}]}
 function defSprints(){return[{id:'sp-backlog',name:'Бэклог'}]}
+function defIdeas(){return{cols:[
+  {id:'taken',name:'Взято в работу',type:'check'},
+  {id:'idea',name:'Идея',type:'text'},
+  {id:'ctype',name:'Тип контента',type:'select',options:['Инфо','Вовлечение','Продажа','Экспертиза']}],rows:[]}}
+function defHadi(){return{cols:[
+  {id:'arch',name:'Архив',type:'check',role:'archive'},
+  {id:'hyp',name:'Гипотеза',type:'text',ph:'Если мы сделаем А, то получим Б'},
+  {id:'act',name:'Действие',type:'text',ph:'Что делаем для проверки'},
+  {id:'data',name:'Данные',type:'text',ph:'Какие данные собираем'},
+  {id:'concl',name:'Выводы',type:'text',ph:'Какой итог получили'},
+  {id:'start',name:'Дата взятия в работу',type:'date'},
+  {id:'end',name:'Дата завершения',type:'date'},
+  {id:'res',name:'Результат',type:'select',options:['Верно','Неверно']}],rows:[]}}
+function normalizeSheet(sh,def){
+  if(!sh||!Array.isArray(sh.cols))sh=def();
+  if(!Array.isArray(sh.rows))sh.rows=[];
+  sh.rows.forEach(r=>{if(!r.cells)r.cells={}});
+  return sh;
+}
 function normalizeState(s){
   if(!s)return s;
+  s.ideas=normalizeSheet(s.ideas,defIdeas);
+  s.hadi=normalizeSheet(s.hadi,defHadi);
+  if(!s.hadi.cols.find(x=>x.role==='archive'))s.hadi.cols.unshift(defHadi().cols[0]);
   if(!s.rubrics||!s.rubrics.length)s.rubrics=defRubrics();
   if(!s.formats||!s.formats.length)s.formats=defFormats();
   if(!s.sprints||!s.sprints.length)s.sprints=defSprints();
@@ -509,7 +617,7 @@ const HISTURL = SB_URL + "/rest/v1/planner_history";
 
 let cloudReady=false, remoteStamp=null, saveTimer=null, dirty=false, lastHist=0, lastLocalHist=0;
 
-function renderAll(){renderCal();renderDev();renderTask();renderMat()}
+function renderAll(){renderCal();renderDev();renderTask();renderMat();renderSheet('ideas');renderSheet('hadi')}
 function setSync(txt,cls){const b=document.getElementById('syncBadge');if(b){b.innerText=txt;b.className='sync '+(cls||'')}}
 
 /* локальная история — кольцо из 8 снимков в браузере */
@@ -668,11 +776,18 @@ window.addEventListener('focus',()=>loadCloud());
 window.addEventListener('online',()=>loadCloud());
 loadCloud();
 
+const TABS={
+  plan:['tabPlan','viewPlan',()=>renderCal()],
+  idea:['tabIdea','viewIdea',()=>renderSheet('ideas')],
+  dev:['tabDev','viewDev',()=>renderDev()],
+  mat:['tabMat','viewMat',()=>renderMat()],
+  task:['tabTask','viewTask',()=>renderTask()],
+  hadi:['tabHadi','viewHadi',()=>renderSheet('hadi')]};
 function setTab(t){
-  const map={plan:'viewPlan',dev:'viewDev',mat:'viewMat',task:'viewTask'};
-  Object.entries(map).forEach(([k,v])=>document.getElementById(v).style.display=(k===t?'block':'none'));
-  ['plan','dev','mat','task'].forEach(k=>document.getElementById('tab'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('on',k===t));
-  if(t==='plan')renderCal();if(t==='dev')renderDev();if(t==='task')renderTask();if(t==='mat')renderMat();
+  Object.entries(TABS).forEach(([k,[tab,view]])=>{
+    document.getElementById(view).style.display=(k===t?'block':'none');
+    document.getElementById(tab).classList.toggle('on',k===t)});
+  TABS[t][2]();
 }
 
 const MONTHS_FULL=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -886,8 +1001,19 @@ function renderDraftSubs(){const box=document.getElementById('pSubs');box.innerH
       <button class="sx" onclick="draftSubs.splice(${i},1);renderDraftSubs()">✕</button>`;box.appendChild(el)})}
 function addSubInput(){const inp=document.getElementById('pSubNew');const v=inp.value.trim();
   if(!v)return;draftSubs.push({t:v,done:false});inp.value='';renderDraftSubs();inp.focus()}
-function savePost(){
-  const name=document.getElementById('pName').value.trim();if(!name){document.getElementById('pName').focus();return}
+function savePost(auto){
+  const subIn=document.getElementById('pSubNew');
+  if(subIn.value.trim()){draftSubs.push({t:subIn.value.trim(),done:false});subIn.value=''}
+  let name=document.getElementById('pName').value.trim();
+  if(!name){
+    if(!auto){document.getElementById('pName').focus();return}
+    const old=editPostId&&state.posts.find(x=>x.id===editPostId);
+    if(old)name=old.name;
+    else if(!document.getElementById('pDesc').value.trim()&&!draftSubs.length&&!readChans().length&&!readFormats().length&&
+      !document.getElementById('pRubric').value&&!document.getElementById('pNewRubric').value.trim()&&
+      !document.getElementById('pNewFormat').value.trim()){closeOv('ovPost');return}
+    else name='Без названия';
+  }
   const desc=document.getElementById('pDesc').value.trim();const chans=readChans();
   const date=document.getElementById('pDate').value;
   let rubric=document.getElementById('pRubric').value;
@@ -931,8 +1057,18 @@ function openTask(id,col){editTaskId=id;newTaskCol=col;
   renderTaskSubs();
   document.getElementById('ovTask').classList.add('on');setTimeout(()=>document.getElementById('kName').focus(),50);
 }
-function saveTask(){
-  const name=document.getElementById('kName').value.trim();if(!name){document.getElementById('kName').focus();return}
+function saveTask(auto){
+  const subIn=document.getElementById('kSubNew');
+  if(subIn.value.trim()){draftTaskSubs.push({t:subIn.value.trim(),done:false});subIn.value=''}
+  let name=document.getElementById('kName').value.trim();
+  if(!name){
+    if(!auto){document.getElementById('kName').focus();return}
+    const old=editTaskId&&state.tasks.find(x=>x.id===editTaskId);
+    if(old)name=old.name;
+    else if(!document.getElementById('kDesc').value.trim()&&!document.getElementById('kDue').value&&
+      !document.getElementById('kTag').value.trim()&&!draftTaskSubs.length){closeOv('ovTask');return}
+    else name='Без названия';
+  }
   const desc=document.getElementById('kDesc').value.trim();const due=document.getElementById('kDue').value;
   const tag=document.getElementById('kTag').value.trim();
   const sprint=document.getElementById('kSprint').value||state.activeSprint;
@@ -949,9 +1085,10 @@ function renderMat(){
     el.innerHTML=`${m.star?'<span class="mat-star">★</span>':''}
       <button class="mat-x" onclick="event.stopPropagation();openMat('${m.id}')" title="редактировать">✎</button>
       <span class="mat-plat">${esc(safeHost(m.url))}</span>
-      <a class="mat-link" href="${encodeURI(m.url)}" target="_blank" rel="noopener">${esc(m.label)}</a>
+      ${m.url?`<a class="mat-link" href="${encodeURI(m.url)}" target="_blank" rel="noopener">${esc(m.label)}</a>`
+        :`<span class="mat-link">${esc(m.label)}</span>`}
       ${m.note?`<div class="mat-note">${esc(m.note)}</div>`:''}
-      <div class="mat-url">${esc(m.url)}</div>`;g.appendChild(el)});
+      <div class="mat-url">${m.url?esc(m.url):'ссылка не указана'}</div>`;g.appendChild(el)});
   const add=document.createElement('button');add.className='mat-add';add.innerText='＋ добавить ссылку';
   add.onclick=()=>openMat(null);g.appendChild(add);
 }
@@ -966,10 +1103,18 @@ function openMat(id){editMatId=id;
     document.getElementById('mNote').value='';document.getElementById('mDel').style.display='none';}
   document.getElementById('ovMat').classList.add('on');setTimeout(()=>document.getElementById('mLabel').focus(),50);
 }
-function saveMat(){
-  const label=document.getElementById('mLabel').value.trim();let url=document.getElementById('mUrl').value.trim();
-  if(!label){document.getElementById('mLabel').focus();return}if(!url){document.getElementById('mUrl').focus();return}
-  if(!/^https?:\/\//i.test(url))url='https://'+url;const note=document.getElementById('mNote').value.trim();
+function saveMat(auto){
+  let label=document.getElementById('mLabel').value.trim();let url=document.getElementById('mUrl').value.trim();
+  const note=document.getElementById('mNote').value.trim();
+  if(auto){
+    const old=editMatId&&state.mats.find(x=>x.id===editMatId);
+    if(!old&&!label&&!url&&!note){closeOv('ovMat');return}
+    if(!url&&old)url=old.url;
+  }else{
+    if(!label){document.getElementById('mLabel').focus();return}if(!url){document.getElementById('mUrl').focus();return}
+  }
+  if(url&&!/^https?:\/\//i.test(url))url='https://'+url;
+  if(!label){const old=editMatId&&state.mats.find(x=>x.id===editMatId);label=old?old.label:(url?safeHost(url):'Без названия')}
   if(editMatId){const m=state.mats.find(x=>x.id===editMatId);m.label=label;m.url=url;m.note=note;}
   else{state.mats.push({id:c(),label,url,note,star:false})}
   save();closeOv('ovMat');renderMat();
@@ -977,10 +1122,125 @@ function saveMat(){
 function deleteMat(){if(!confirm('Удалить ссылку?'))return;
   state.mats=state.mats.filter(x=>x.id!==editMatId);save();closeOv('ovMat');renderMat()}
 
+/* ── Таблицы: идеи и гипотезы HADI ── */
+const sheetUI={ideas:{filters:{}},hadi:{filters:{},archived:false}};
+function sheetArchCol(sh){return sh.cols.find(x=>x.role==='archive')}
+function cellFilled(v){return v!==''&&v!==false&&v!=null}
+function sheetVisibleRows(key){
+  const sh=state[key],ui=sheetUI[key],ac=sheetArchCol(sh);
+  return sh.rows.filter(r=>{
+    if(ac&&!!r.cells[ac.id]!==!!ui.archived)return false;
+    for(const [cid,f] of Object.entries(ui.filters)){
+      if(!f)continue;const col=sh.cols.find(x=>x.id===cid);if(!col)continue;const v=r.cells[cid];
+      if(col.type==='check'){if(f==='yes'&&!v)return false;if(f==='no'&&v)return false}
+      else if(col.type==='select'){if(f==='__empty'){if(v)return false}else if(v!==f)return false}
+    }
+    return true});
+}
+function sheetFilterBtn(key,cid,val,label,cur){
+  return `<button class="spbtn${cur===val?' on':''}" data-v="${esc(val)}" onclick="setSheetFilter('${key}','${cid}',this.dataset.v)">${esc(label)}</button>`}
+function setSheetFilter(key,cid,v){sheetUI[key].filters[cid]=v;renderSheet(key)}
+function setSheetArch(key,on){sheetUI[key].archived=on;renderSheet(key)}
+function sheetCell(key,r,col){
+  const v=r.cells[col.id],a=`'${key}','${r.id}','${col.id}'`;
+  if(col.type==='check')return `<input type="checkbox" class="ck" ${v?'checked':''} onchange="setCell(${a},this.checked,true)">`;
+  if(col.type==='date')return `<input type="date" class="sh-date" value="${esc(v||'')}" onchange="setCell(${a},this.value,false)">`;
+  if(col.type==='select'){const opts=col.options||[];
+    const cls=v==='Верно'?' ok':v==='Неверно'?' no':'';
+    return `<select class="sh-sel${cls}" onchange="setCell(${a},this.value,true)"><option value="">—</option>`+
+      opts.map(o=>`<option value="${esc(o)}" ${o===v?'selected':''}>${esc(o)}</option>`).join('')+
+      (v&&!opts.includes(v)?`<option value="${esc(v)}" selected>${esc(v)}</option>`:'')+`</select>`}
+  return `<textarea class="sh-txt" rows="1" placeholder="${esc(col.ph||'')}" oninput="autoGrow(this);setCell(${a},this.value,false)">${esc(v||'')}</textarea>`;
+}
+function autoGrow(el){if(!el.offsetParent)return;el.style.height='auto';el.style.height=el.scrollHeight+'px'}
+function setCell(key,rid,cid,val,rerender){
+  const r=state[key].rows.find(x=>x.id===rid);if(!r)return;
+  r.cells[cid]=val;save();if(rerender)renderSheet(key);
+}
+function renderSheet(key){
+  const box=document.getElementById(key+'Sheet');if(!box)return;
+  const sh=state[key],ui=sheetUI[key],ac=sheetArchCol(sh);
+  let bar='';
+  if(ac){const na=sh.rows.filter(r=>r.cells[ac.id]).length;
+    bar+=`<div class="sh-bar"><button class="spbtn${!ui.archived?' on':''}" onclick="setSheetArch('${key}',false)">Активные · ${sh.rows.length-na}</button>`+
+      `<button class="spbtn${ui.archived?' on':''}" onclick="setSheetArch('${key}',true)">Архив · ${na}</button></div>`}
+  const fcols=sh.cols.filter(col=>col.role!=='archive'&&(col.type==='check'||col.type==='select'));
+  Object.keys(ui.filters).forEach(k=>{if(!fcols.find(x=>x.id===k))delete ui.filters[k]});
+  fcols.forEach(col=>{const cur=ui.filters[col.id]||'';
+    let b=`<div class="sh-bar"><span class="sh-lbl">${esc(col.name)}:</span>`+sheetFilterBtn(key,col.id,'','Все',cur);
+    if(col.type==='check')b+=sheetFilterBtn(key,col.id,'yes','Да',cur)+sheetFilterBtn(key,col.id,'no','Нет',cur);
+    else{(col.options||[]).forEach(o=>b+=sheetFilterBtn(key,col.id,o,o,cur));b+=sheetFilterBtn(key,col.id,'__empty','не указан',cur)}
+    bar+=b+'</div>'});
+  const rows=sheetVisibleRows(key);
+  const total=ac?sh.rows.filter(r=>!!r.cells[ac.id]===!!ui.archived).length:sh.rows.length;
+  let h=`<div class="sh-count">Показано ${rows.length} из ${total}</div><div class="sh-wrap"><table class="sheet"><thead><tr>`;
+  sh.cols.forEach(col=>h+=`<th class="c-${col.type}"><button class="th-btn" onclick="openSheetCol('${key}','${col.id}')" title="переименовать / удалить столбец">${esc(col.name)}<i>✎</i></button></th>`);
+  h+=`<th style="width:1%"><button class="th-add" onclick="openSheetCol('${key}',null)" title="добавить столбец">＋</button></th></tr></thead><tbody>`;
+  rows.forEach(r=>{h+=`<tr data-r="${r.id}">`;
+    sh.cols.forEach(col=>h+=`<td class="c-${col.type}">${sheetCell(key,r,col)}</td>`);
+    h+=`<td><button class="rx" onclick="delSheetRow('${key}','${r.id}')" title="удалить строку">✕</button></td></tr>`});
+  if(!rows.length){const msg=ui.archived&&!total?'В архиве пока пусто':!total?'Пока пусто — добавь первую строку':'Под фильтр ничего не попало';
+    h+=`<tr><td colspan="${sh.cols.length+1}" class="sh-empty">${msg}</td></tr>`}
+  h+='</tbody></table></div>';
+  if(!ui.archived)h+=`<button class="addcard sh-addrow" onclick="addSheetRow('${key}')">＋ строка</button>`;
+  box.innerHTML=bar+h;
+  box.querySelectorAll('.sh-txt').forEach(autoGrow);
+}
+function addSheetRow(key){
+  const sh=state[key],ui=sheetUI[key],cells={};
+  /* новая строка сразу подходит под включённые фильтры, чтобы не исчезла */
+  Object.entries(ui.filters).forEach(([cid,f])=>{if(!f)return;const col=sh.cols.find(x=>x.id===cid);if(!col)return;
+    if(col.type==='check')cells[cid]=(f==='yes');else if(col.type==='select'&&f!=='__empty')cells[cid]=f});
+  const id=c();sh.rows.push({id,cells});save();renderSheet(key);
+  const t=document.querySelector(`#${key}Sheet tr[data-r="${id}"] .sh-txt`);if(t)t.focus();
+}
+function delSheetRow(key,rid){
+  const sh=state[key],r=sh.rows.find(x=>x.id===rid);if(!r)return;
+  if(Object.values(r.cells).some(cellFilled)&&!confirm('Удалить строку?'))return;
+  sh.rows=sh.rows.filter(x=>x.id!==rid);save();renderSheet(key);
+}
+let colKey=null,colEditId=null;
+function openSheetCol(key,cid){
+  colKey=key;colEditId=cid;const col=cid?state[key].cols.find(x=>x.id===cid):null;
+  document.getElementById('colTitle').innerText=col?'Столбец':'Новый столбец';
+  document.getElementById('cName').value=col?col.name:'';
+  const ty=document.getElementById('cType');ty.value=col?col.type:'text';ty.disabled=!!col;
+  document.getElementById('cOpts').value=col&&col.options?col.options.join('\n'):'';
+  document.getElementById('cDel').style.display=col&&col.role!=='archive'?'block':'none';
+  toggleColOpts();
+  document.getElementById('ovCol').classList.add('on');setTimeout(()=>document.getElementById('cName').focus(),50);
+}
+function toggleColOpts(){document.getElementById('cOptsBox').style.display=document.getElementById('cType').value==='select'?'block':'none'}
+function saveSheetCol(auto){
+  const sh=state[colKey],col=colEditId?sh.cols.find(x=>x.id===colEditId):null;
+  let name=document.getElementById('cName').value.trim();
+  if(!name){if(!auto){document.getElementById('cName').focus();return}if(!col){closeOv('ovCol');return}name=col.name}
+  const type=col?col.type:document.getElementById('cType').value;
+  const options=document.getElementById('cOpts').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(type==='select'&&!options.length&&!auto){document.getElementById('cOpts').focus();return}
+  if(col){col.name=name;if(type==='select')col.options=options}
+  else{const n={id:c(),name,type};if(type==='select')n.options=options;sh.cols.push(n)}
+  save();closeOv('ovCol');renderSheet(colKey);
+}
+function deleteSheetCol(){
+  const sh=state[colKey],col=sh.cols.find(x=>x.id===colEditId);if(!col||col.role==='archive')return;
+  if(sh.cols.filter(x=>x.role!=='archive').length<=1){alert('Нужен хотя бы один столбец');return}
+  const filled=sh.rows.filter(r=>cellFilled(r.cells[col.id])).length;
+  if(!confirm(`Удалить столбец «${col.name}»?`+(filled?` Данные в нём (строк: ${filled}) пропадут — вернуть можно через «История».`:'')))return;
+  sh.cols=sh.cols.filter(x=>x.id!==col.id);sh.rows.forEach(r=>delete r.cells[col.id]);
+  save();closeOv('ovCol');renderSheet(colKey);
+}
+
 function closeOv(id){document.getElementById(id).classList.remove('on')}
-function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'))});
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+/* клик мимо карточки или Esc — сохраняем, а не выбрасываем правки */
+const OV_SAVE={ovPost:()=>savePost(true),ovTask:()=>saveTask(true),ovMat:()=>saveMat(true),ovCol:()=>saveSheetCol(true)};
+function softClose(id){const f=OV_SAVE[id];if(f)f();else closeOv(id)}
+let ovDown=null;
+document.querySelectorAll('.ov').forEach(o=>{
+  o.addEventListener('mousedown',e=>{ovDown=e.target});
+  o.addEventListener('click',e=>{if(e.target===o&&ovDown===o)softClose(o.id)})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.ov.on').forEach(o=>softClose(o.id))});
 
 renderCal();
 </script>
