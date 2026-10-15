@@ -211,7 +211,13 @@
   .sh-count{font-size:12px;font-weight:700;color:var(--dusk-soft);margin:4px 2px 8px}
   .sh-wrap{overflow-x:auto;border-radius:18px;background:rgba(255,255,255,.6);border:1.5px solid rgba(135,144,172,.22)}
   table.sheet{border-collapse:collapse;width:100%}
-  .sheet th{text-align:left;padding:0;border-bottom:2px solid rgba(135,144,172,.28);background:rgba(169,180,208,.18);white-space:nowrap}
+  .sheet th{text-align:left;padding:0;border-bottom:2px solid rgba(135,144,172,.28);background:rgba(169,180,208,.18);white-space:nowrap;position:relative}
+  .col-rs{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:col-resize;z-index:2;touch-action:none}
+  .col-rs::after{content:"";position:absolute;top:20%;bottom:20%;left:3px;width:3px;border-radius:2px;background:transparent;transition:.15s}
+  .col-rs:hover::after,.col-rs.on::after{background:var(--accent)}
+  .sheet.fixed{table-layout:fixed}
+  .sheet.fixed .th-btn{overflow:hidden;text-overflow:ellipsis}
+  .sheet.fixed .sh-txt,.sheet.fixed .sh-sel,.sheet.fixed .sh-date{min-width:0;width:100%}
   .sheet th+th,.sheet td+td{border-left:1px solid rgba(135,144,172,.18)}
   .sheet th.c-text{min-width:220px}
   .th-btn{width:100%;border:none;background:transparent;text-align:left;padding:10px 12px;cursor:pointer;
@@ -362,10 +368,10 @@
 
   <nav class="tabs">
     <button id="tabPlan" class="on" onclick="setTab('plan')">Контент-план</button>
-    <button id="tabIdea" onclick="setTab('idea')">Идеи</button>
     <button id="tabDev" onclick="setTab('dev')">Разработка контента (стадии)</button>
     <button id="tabMat" onclick="setTab('mat')">Ресурсы</button>
     <button id="tabTask" onclick="setTab('task')">Доска задач</button>
+    <button id="tabIdea" onclick="setTab('idea')">Идеи</button>
     <button id="tabHadi" onclick="setTab('hadi')">Гипотезы по HADI</button>
   </nav>
 
@@ -413,7 +419,7 @@
       <div id="hadiSheet"></div>
       <div class="rules">
         <h4>Правила заполнения</h4>
-        <div class="rule"><b>Гипотеза</b> — «Если мы сделаем А, то получим Б»</div>
+        <div class="rule"><b>Гипотеза</b> — если мы сделаем А, то получим Б</div>
         <div class="rule"><b>Действие</b> — что мы делаем для проверки гипотезы</div>
         <div class="rule"><b>Данные</b> — какие данные собираем</div>
         <div class="rule"><b>Выводы</b> — какой итог получили</div>
@@ -1173,9 +1179,15 @@ function renderSheet(key){
     bar+=b+'</div>'});
   const rows=sheetVisibleRows(key);
   const total=ac?sh.rows.filter(r=>!!r.cells[ac.id]===!!ui.archived).length:sh.rows.length;
-  let h=`<div class="sh-count">Показано ${rows.length} из ${total}</div><div class="sh-wrap"><table class="sheet"><thead><tr>`;
-  sh.cols.forEach(col=>h+=`<th class="c-${col.type}"><button class="th-btn" onclick="openSheetCol('${key}','${col.id}')" title="переименовать / удалить столбец">${esc(col.name)}<i>✎</i></button></th>`);
-  h+=`<th style="width:1%"><button class="th-add" onclick="openSheetCol('${key}',null)" title="добавить столбец">＋</button></th></tr></thead><tbody>`;
+  /* если ширину хоть раз тянули — фиксированная раскладка, новым столбцам ширина по умолчанию */
+  const fixed=sh.cols.some(x=>x.w);
+  if(fixed)sh.cols.forEach(x=>{if(!x.w)x.w=COL_W[x.type]||160});
+  const tw=fixed?sh.cols.reduce((s,x)=>s+x.w,0)+RS_LAST:0;
+  let h=`<div class="sh-count">Показано ${rows.length} из ${total} · тяни край заголовка, чтобы поменять ширину столбца</div><div class="sh-wrap">`+
+    `<table class="sheet${fixed?' fixed':''}"${fixed?` style="width:${tw}px"`:''}><thead><tr>`;
+  sh.cols.forEach(col=>h+=`<th class="c-${col.type}"${fixed?` style="width:${col.w}px"`:''}><button class="th-btn" onclick="openSheetCol('${key}','${col.id}')" title="переименовать / удалить столбец">${esc(col.name)}<i>✎</i></button>`+
+    `<span class="col-rs" onpointerdown="startColResize(event,'${key}','${col.id}')" ondblclick="resetColW('${key}')" title="тяни — ширина · двойной клик — сбросить все ширины"></span></th>`);
+  h+=`<th style="width:${fixed?RS_LAST+'px':'1%'}"><button class="th-add" onclick="openSheetCol('${key}',null)" title="добавить столбец">＋</button></th></tr></thead><tbody>`;
   rows.forEach(r=>{h+=`<tr data-r="${r.id}">`;
     sh.cols.forEach(col=>h+=`<td class="c-${col.type}">${sheetCell(key,r,col)}</td>`);
     h+=`<td><button class="rx" onclick="delSheetRow('${key}','${r.id}')" title="удалить строку">✕</button></td></tr>`});
@@ -1186,6 +1198,23 @@ function renderSheet(key){
   box.innerHTML=bar+h;
   box.querySelectorAll('.sh-txt').forEach(autoGrow);
 }
+const COL_W={check:110,text:260,select:160,date:170},RS_LAST=46;
+function startColResize(e,key,cid){
+  e.preventDefault();e.stopPropagation();
+  const handle=e.currentTarget,table=handle.closest('table'),ths=[...table.querySelectorAll('thead th')];
+  const sh=state[key],col=sh.cols.find(x=>x.id===cid);if(!col)return;
+  /* первое перетаскивание: запоминаем текущие ширины всех столбцов */
+  if(!sh.cols.every(x=>x.w))sh.cols.forEach((x,i)=>x.w=Math.round(ths[i].getBoundingClientRect().width));
+  const apply=()=>{let sum=0;sh.cols.forEach((x,i)=>{ths[i].style.width=x.w+'px';sum+=x.w});
+    ths[ths.length-1].style.width=RS_LAST+'px';table.classList.add('fixed');table.style.width=(sum+RS_LAST)+'px'};
+  apply();handle.classList.add('on');
+  const x0=e.clientX,w0=col.w;
+  const move=ev=>{col.w=Math.max(60,Math.round(w0+ev.clientX-x0));apply();table.querySelectorAll('.sh-txt').forEach(autoGrow)};
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+    handle.classList.remove('on');save()};
+  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
+function resetColW(key){state[key].cols.forEach(x=>delete x.w);save();renderSheet(key)}
 function addSheetRow(key){
   const sh=state[key],ui=sheetUI[key],cells={};
   /* новая строка сразу подходит под включённые фильтры, чтобы не исчезла */
