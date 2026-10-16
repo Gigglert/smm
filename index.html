@@ -226,14 +226,22 @@
   .th-btn i{font-style:normal;opacity:.4;margin-left:5px}
   .th-add{border:none;background:transparent;color:var(--accent-dp);font-weight:700;font-size:17px;cursor:pointer;padding:8px 12px;width:100%}
   .th-add:hover{background:rgba(231,154,138,.14)}
-  .sheet td{border-bottom:1px solid rgba(135,144,172,.18);padding:4px 6px;vertical-align:top}
+  /* ячейка целиком — поле ввода: клик в любом месте квадрата, подсветка всей ячейки */
+  .sheet td{border-bottom:1px solid rgba(135,144,172,.18);padding:0;vertical-align:top;cursor:text}
+  .sheet td.c-check,.sheet td.c-select,.sheet td.c-date,.sheet td.c-del{cursor:pointer}
   .sheet tr:hover td{background:rgba(255,255,255,.55)}
+  .sheet td:focus-within{background:#fff!important;box-shadow:inset 0 0 0 2px rgba(231,154,138,.7)}
   .sheet td.c-check{text-align:center;vertical-align:middle}
+  .sheet td.c-del{text-align:center}
   .sh-txt{width:100%;min-width:200px;border:none;background:transparent;resize:none;overflow:hidden;display:block;
-    font:500 14px/1.4 'Roboto',Arial,sans-serif;color:var(--ink);padding:6px;border-radius:8px;outline:none}
-  .sh-date,.sh-sel{border:none;background:transparent;font:500 14px 'Roboto',Arial,sans-serif;color:var(--ink);
-    padding:6px;border-radius:8px;outline:none;cursor:pointer;min-width:130px}
-  .sh-txt:focus,.sh-date:focus,.sh-sel:focus{background:#fff;box-shadow:0 0 0 2px rgba(231,154,138,.4)}
+    font:500 14px/1.4 'Roboto',Arial,sans-serif;color:var(--ink);padding:10px 12px;outline:none}
+  .sh-date,.sh-sel{width:100%;border:none;background:transparent;font:500 14px 'Roboto',Arial,sans-serif;color:var(--ink);
+    padding:10px 12px;outline:none;cursor:pointer;min-width:130px;display:block}
+  .th-in{display:flex;align-items:center}
+  .th-in .grip{padding:10px 0 10px 10px;margin:0}
+  .th-in .th-btn{flex:1;min-width:0;padding-left:6px}
+  .sheet th.colover{box-shadow:inset 3px 0 0 var(--accent)}
+  .sheet th.colover.after{box-shadow:inset -3px 0 0 var(--accent)}
   .sh-sel.ok{color:#4a7a5c;font-weight:700}
   .sh-sel.no{color:var(--accent-dp);font-weight:700}
   .ck{appearance:none;-webkit-appearance:none;width:22px;height:22px;border:2px solid var(--accent);border-radius:7px;
@@ -533,6 +541,13 @@
     <div id="cOptsBox">
       <label class="f">Варианты — каждый с новой строки</label>
       <textarea id="cOpts" placeholder="Вариант 1&#10;Вариант 2"></textarea>
+    </div>
+    <div id="cMoveBox">
+      <label class="f">Место в таблице</label>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn del" style="flex:1" onclick="shiftSheetCol(-1)">← левее</button>
+        <button type="button" class="btn del" style="flex:1" onclick="shiftSheetCol(1)">правее →</button>
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn del" id="cDel" onclick="deleteSheetCol()">Удалить</button>
@@ -1183,20 +1198,58 @@ function renderSheet(key){
   const fixed=sh.cols.some(x=>x.w);
   if(fixed)sh.cols.forEach(x=>{if(!x.w)x.w=COL_W[x.type]||160});
   const tw=fixed?sh.cols.reduce((s,x)=>s+x.w,0)+RS_LAST:0;
-  let h=`<div class="sh-count">Показано ${rows.length} из ${total} · тяни край заголовка, чтобы поменять ширину столбца</div><div class="sh-wrap">`+
+  let h=`<div class="sh-count">Показано ${rows.length} из ${total} · тяни ⠿ — переставить столбец · тяни край заголовка — поменять ширину</div><div class="sh-wrap">`+
     `<table class="sheet${fixed?' fixed':''}"${fixed?` style="width:${tw}px"`:''}><thead><tr>`;
-  sh.cols.forEach(col=>h+=`<th class="c-${col.type}"${fixed?` style="width:${col.w}px"`:''}><button class="th-btn" onclick="openSheetCol('${key}','${col.id}')" title="переименовать / удалить столбец">${esc(col.name)}<i>✎</i></button>`+
+  sh.cols.forEach(col=>h+=`<th class="c-${col.type}"${fixed?` style="width:${col.w}px"`:''} data-c="${col.id}"`+
+    ` ondragover="sheetColOver(event,this)" ondragleave="this.classList.remove('colover','after')" ondrop="sheetColDrop(event,this,'${key}','${col.id}')">`+
+    `<div class="th-in"><span class="grip" draggable="true" ondragstart="sheetColDrag(event,'${key}','${col.id}')" title="тяни, чтобы переставить столбец">⠿</span>`+
+    `<button class="th-btn" onclick="openSheetCol('${key}','${col.id}')" title="переименовать / удалить столбец">${esc(col.name)}<i>✎</i></button></div>`+
     `<span class="col-rs" onpointerdown="startColResize(event,'${key}','${col.id}')" ondblclick="resetColW('${key}')" title="тяни — ширина · двойной клик — сбросить все ширины"></span></th>`);
   h+=`<th style="width:${fixed?RS_LAST+'px':'1%'}"><button class="th-add" onclick="openSheetCol('${key}',null)" title="добавить столбец">＋</button></th></tr></thead><tbody>`;
   rows.forEach(r=>{h+=`<tr data-r="${r.id}">`;
     sh.cols.forEach(col=>h+=`<td class="c-${col.type}">${sheetCell(key,r,col)}</td>`);
-    h+=`<td><button class="rx" onclick="delSheetRow('${key}','${r.id}')" title="удалить строку">✕</button></td></tr>`});
+    h+=`<td class="c-del"><button class="rx" onclick="delSheetRow('${key}','${r.id}')" title="удалить строку">✕</button></td></tr>`});
   if(!rows.length){const msg=ui.archived&&!total?'В архиве пока пусто':!total?'Пока пусто — добавь первую строку':'Под фильтр ничего не попало';
     h+=`<tr><td colspan="${sh.cols.length+1}" class="sh-empty">${msg}</td></tr>`}
   h+='</tbody></table></div>';
   if(!ui.archived)h+=`<button class="addcard sh-addrow" onclick="addSheetRow('${key}')">＋ строка</button>`;
   box.innerHTML=bar+h;
   box.querySelectorAll('.sh-txt').forEach(autoGrow);
+  box.onclick=sheetCellClick;
+}
+/* клик по пустому месту ячейки — как клик по самому полю */
+function sheetCellClick(e){
+  const td=e.target.closest('td');if(!td||e.target!==td||td.classList.contains('c-del'))return;
+  const el=td.querySelector('textarea,select,input');if(!el)return;
+  if(el.type==='checkbox'){el.click();return}
+  el.focus();
+  if(el.tagName==='TEXTAREA'){const n=el.value.length;el.setSelectionRange(n,n)}
+  else if(el.showPicker){try{el.showPicker()}catch(_){}}
+}
+/* перестановка столбцов перетаскиванием за ⠿ */
+function sheetColDrag(e,key,cid){e.dataTransfer.setData('sheetcol',key+'|'+cid);e.dataTransfer.effectAllowed='move'}
+function sheetColOver(e,th){
+  if(!e.dataTransfer.types.includes('sheetcol'))return;e.preventDefault();
+  const r=th.getBoundingClientRect();th.classList.add('colover');th.classList.toggle('after',e.clientX>r.left+r.width/2);
+}
+function sheetColDrop(e,th,key,targetId){
+  const after=th.classList.contains('after');th.classList.remove('colover','after');
+  const [k,cid]=(e.dataTransfer.getData('sheetcol')||'').split('|');if(k!==key||!cid)return;e.preventDefault();
+  moveSheetCol(key,cid,targetId,after);
+}
+function moveSheetCol(key,cid,targetId,after){
+  const cols=state[key].cols;if(cid===targetId)return;
+  const from=cols.findIndex(x=>x.id===cid);if(from<0)return;
+  const [m]=cols.splice(from,1);
+  let to=cols.findIndex(x=>x.id===targetId);if(to<0){cols.splice(from,0,m);return}
+  cols.splice(after?to+1:to,0,m);
+  save();renderSheet(key);
+}
+/* сдвиг из окна столбца — работает и на телефоне */
+function shiftSheetCol(dir){
+  const cols=state[colKey].cols,i=cols.findIndex(x=>x.id===colEditId),j=i+dir;
+  if(i<0||j<0||j>=cols.length)return;
+  [cols[i],cols[j]]=[cols[j],cols[i]];save();renderSheet(colKey);
 }
 const COL_W={check:110,text:260,select:160,date:170},RS_LAST=46;
 function startColResize(e,key,cid){
@@ -1236,6 +1289,7 @@ function openSheetCol(key,cid){
   const ty=document.getElementById('cType');ty.value=col?col.type:'text';ty.disabled=!!col;
   document.getElementById('cOpts').value=col&&col.options?col.options.join('\n'):'';
   document.getElementById('cDel').style.display=col&&col.role!=='archive'?'block':'none';
+  document.getElementById('cMoveBox').style.display=col?'block':'none';
   toggleColOpts();
   document.getElementById('ovCol').classList.add('on');setTimeout(()=>document.getElementById('cName').focus(),50);
 }
