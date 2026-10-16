@@ -114,6 +114,11 @@
   .chip.tag{background:rgba(125,154,134,.22);color:#5c7a66}
   .chip.subs{background:rgba(248,244,246,.9);color:var(--dusk-soft);border:1px solid rgba(135,144,172,.3)}
   .chip.due{background:rgba(125,154,134,.2);color:#5c7a66}
+  .chip.idea{background:rgba(216,164,95,.22);color:#9a6a25}
+  .idea-link{display:block;margin:0 auto 6px;border:none;background:rgba(216,164,95,.22);color:#9a6a25;border-radius:20px;
+    padding:3px 9px;font:700 10.5px 'Roboto',Arial,sans-serif;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .idea-link:hover{background:rgba(216,164,95,.4)}
+  .idea-link:focus{outline:none}
   .chip.due.soon{background:rgba(216,164,95,.22);color:#b07d30}
   .chip.due.over{background:rgba(231,154,138,.24);color:var(--accent-dp)}
   .postflag{position:absolute;top:9px;right:11px;font-family:'Montserrat',sans-serif;font-size:14px;color:var(--accent);opacity:.75}
@@ -401,7 +406,7 @@
   </section>
 
   <section id="viewIdea" style="display:none">
-    <h2 class="sec">Идеи <span class="hint">// банк идей · клик по заголовку столбца — переименовать или удалить · ＋ справа — новый столбец</span></h2>
+    <h2 class="sec">Идеи <span class="hint">// галка «Взято в работу» — идея становится постом в первой стадии разработки · клик по заголовку — настроить столбец · ＋ справа — новый столбец</span></h2>
     <div class="panel"><div id="ideasSheet"></div></div>
   </section>
 
@@ -574,9 +579,9 @@ function defRubrics(){return [
   {id:'rb-team',name:'Команда',color:'#9dc8c0'}]}
 function defSprints(){return[{id:'sp-backlog',name:'Бэклог'}]}
 function defIdeas(){return{cols:[
-  {id:'taken',name:'Взято в работу',type:'check'},
-  {id:'idea',name:'Идея',type:'text'},
-  {id:'ctype',name:'Тип контента',type:'select',options:['Инфо','Вовлечение','Продажа','Экспертиза']}],rows:[]}}
+  {id:'taken',name:'Взято в работу',type:'check',role:'taken'},
+  {id:'idea',name:'Идея',type:'text',role:'idea'},
+  {id:'ctype',name:'Тип контента',type:'select',role:'ctype',options:['Инфо','Вовлечение','Продажа','Экспертиза']}],rows:[]}}
 function defHadi(){return{cols:[
   {id:'arch',name:'Архив',type:'check',role:'archive'},
   {id:'hyp',name:'Гипотеза',type:'text',ph:'Если мы сделаем А, то получим Б'},
@@ -595,6 +600,7 @@ function normalizeSheet(sh,def){
 function normalizeState(s){
   if(!s)return s;
   s.ideas=normalizeSheet(s.ideas,defIdeas);
+  s.ideas.cols.forEach(x=>{if(!x.role&&['taken','idea','ctype'].includes(x.id))x.role=x.id});
   s.hadi=normalizeSheet(s.hadi,defHadi);
   if(!s.hadi.cols.find(x=>x.role==='archive'))s.hadi.cols.unshift(defHadi().cols[0]);
   if(!s.rubrics||!s.rubrics.length)s.rubrics=defRubrics();
@@ -880,6 +886,8 @@ function postCard(p){
   if(rb)meta+=`<span class="chip" style="background:${rb.color};color:#fff">#${esc(rb.name)}</span>`;
   (p.chans||[]).forEach(ch=>meta+=`<span class="chip chan">${esc(ch)}</span>`);
   (p.formats||[]).forEach(f=>meta+=`<span class="chip" style="background:rgba(240,205,178,.5);color:#8a6a4f">${esc(f)}</span>`);
+  const src=[p.ideaId?'из идей':'',p.ctype||''].filter(Boolean).join(' · ');
+  if(src)meta+=`<span class="chip idea">${esc(src)}</span>`;
   if(p.date)meta+=dueChip(p.date);
   if(p.subs&&p.subs.length){const dn=p.subs.filter(s=>s.done).length;meta+=`<span class="chip subs">✓ ${dn}/${p.subs.length}</span>`}
   d.innerHTML=`<span class="postflag">★</span><div class="card-title">${esc(p.name)}</div>
@@ -983,7 +991,8 @@ function renameCol(board,id,name){const cols=board==='dev'?state.devCols:state.t
 function delCol(board,id){
   const cols=board==='dev'?state.devCols:state.taskCols;const items=board==='dev'?state.posts:state.tasks;
   if(items.some(x=>x.col===id)&&!confirm('В колонке есть карточки — удалить вместе с ними?'))return;
-  if(board==='dev'){state.posts=state.posts.filter(x=>x.col!==id);state.devCols=cols.filter(x=>x.id!==id)}
+  if(board==='dev'){unlinkIdeas(state.posts.filter(x=>x.col===id).map(x=>x.id));
+    state.posts=state.posts.filter(x=>x.col!==id);state.devCols=cols.filter(x=>x.id!==id)}
   else{state.tasks=state.tasks.filter(x=>x.col!==id);state.taskCols=cols.filter(x=>x.id!==id)}
   save();board==='dev'?renderDev():renderTask();
 }
@@ -1051,7 +1060,7 @@ function savePost(auto){
   save();closeOv('ovPost');renderCal();renderDev();
 }
 function deletePost(){if(!confirm('Удалить пост? Он исчезнет и из календаря, и из доски.'))return;
-  state.posts=state.posts.filter(x=>x.id!==editPostId);save();closeOv('ovPost');renderCal();renderDev()}
+  state.posts=state.posts.filter(x=>x.id!==editPostId);unlinkIdeas([editPostId]);save();closeOv('ovPost');renderCal();renderDev()}
 
 let editTaskId=null,newTaskCol=null,draftTaskSubs=[];
 function fillSprints(sel,val){sel.innerHTML=state.sprints.map(sp=>`<option value="${sp.id}" ${sp.id===val?'selected':''}>${esc(sp.name)}</option>`).join('')}
@@ -1164,7 +1173,12 @@ function setSheetFilter(key,cid,v){sheetUI[key].filters[cid]=v;renderSheet(key)}
 function setSheetArch(key,on){sheetUI[key].archived=on;renderSheet(key)}
 function sheetCell(key,r,col){
   const v=r.cells[col.id],a=`'${key}','${r.id}','${col.id}'`;
-  if(col.type==='check')return `<input type="checkbox" class="ck" ${v?'checked':''} onchange="setCell(${a},this.checked,true)">`;
+  if(col.type==='check'){
+    let link='';
+    if(col.role==='taken'&&r.postId){const p=state.posts.find(x=>x.id===r.postId);
+      if(p){const st=state.devCols.find(x=>x.id===p.col);
+        link=`<button class="idea-link" onclick="openPost('${p.id}')" title="открыть пост">в разработке: ${esc(st?st.name:'—')}</button>`}}
+    return `<input type="checkbox" class="ck" ${v?'checked':''} onchange="setCell(${a},this.checked,true)">${link}`}
   if(col.type==='date')return `<input type="date" class="sh-date" value="${esc(v||'')}" onchange="setCell(${a},this.value,false)">`;
   if(col.type==='select'){const opts=col.options||[];
     const cls=v==='Верно'?' ok':v==='Неверно'?' no':'';
@@ -1176,7 +1190,43 @@ function sheetCell(key,r,col){
 function autoGrow(el){if(!el.offsetParent)return;el.style.height='auto';el.style.height=el.scrollHeight+'px'}
 function setCell(key,rid,cid,val,rerender){
   const r=state[key].rows.find(x=>x.id===rid);if(!r)return;
-  r.cells[cid]=val;save();if(rerender)renderSheet(key);
+  r.cells[cid]=val;
+  const col=state[key].cols.find(x=>x.id===cid);
+  let linked=false;
+  if(key==='ideas'&&col&&col.role==='taken'){ideaTaken(r,col,val);linked=true}
+  if(key==='ideas'&&col&&col.role==='ctype'&&r.postId){const p=state.posts.find(x=>x.id===r.postId);if(p){p.ctype=val;linked=true}}
+  save();if(rerender)renderSheet(key);if(linked){renderDev();renderCal()}
+}
+/* связка «Идеи» → «Разработка контента» */
+function ideaTaken(r,col,on){
+  const sh=state.ideas;
+  const textCol=sh.cols.find(x=>x.role==='idea')||sh.cols.find(x=>x.type==='text');
+  const typeCol=sh.cols.find(x=>x.role==='ctype');
+  const linked=r.postId&&state.posts.find(x=>x.id===r.postId);
+  if(on){
+    if(linked)return;
+    const txt=String((textCol&&r.cells[textCol.id])||'').trim();
+    if(!txt){alert('Сначала напиши идею — из неё сделаем пост.');r.cells[col.id]=false;return}
+    const stage=state.devCols[0];
+    if(!stage){alert('В «Разработке контента» нет ни одной стадии — добавь колонку.');r.cells[col.id]=false;return}
+    let name=txt.split('\n')[0].trim();if(name.length>80)name=name.slice(0,79)+'…';
+    const p={id:c(),name,desc:txt!==name?txt:'',chans:[],rubric:'',formats:[],date:'',col:stage.id,subs:[],
+      ideaId:r.id,ctype:(typeCol&&r.cells[typeCol.id])||''};
+    state.posts.push(p);r.postId=p.id;
+  }else{
+    if(linked){
+      if(confirm(`Удалить пост «${linked.name}» из разработки?\n\nОК — удалить пост.\nОтмена — пост останется в разработке.`))
+        state.posts=state.posts.filter(x=>x.id!==linked.id);
+      else delete linked.ideaId;
+    }
+    delete r.postId;
+  }
+}
+/* пост удалили на доске — идея снова «не взята» */
+function unlinkIdeas(postIds){
+  const takenCol=state.ideas.cols.find(x=>x.role==='taken');
+  state.ideas.rows.forEach(r=>{if(r.postId&&postIds.includes(r.postId)){delete r.postId;if(takenCol)r.cells[takenCol.id]=false}});
+  renderSheet('ideas');
 }
 function renderSheet(key){
   const box=document.getElementById(key+'Sheet');if(!box)return;
@@ -1278,7 +1328,9 @@ function addSheetRow(key){
 }
 function delSheetRow(key,rid){
   const sh=state[key],r=sh.rows.find(x=>x.id===rid);if(!r)return;
-  if(Object.values(r.cells).some(cellFilled)&&!confirm('Удалить строку?'))return;
+  const p=r.postId&&state.posts.find(x=>x.id===r.postId);
+  if(Object.values(r.cells).some(cellFilled)&&!confirm(p?'Удалить идею? Пост в разработке останется.':'Удалить строку?'))return;
+  if(p){delete p.ideaId;renderDev()}
   sh.rows=sh.rows.filter(x=>x.id!==rid);save();renderSheet(key);
 }
 let colKey=null,colEditId=null;
