@@ -1,0 +1,11 @@
+{
+  "name": "getit-smm-planner",
+  "private": true,
+  "description": "Планер Get IT // SMM",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/planner.test.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
