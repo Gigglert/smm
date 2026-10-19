@@ -1,0 +1,22 @@
+# Автопроверки планера: запускаются при каждой правке в main и в каждом pull request.
+# Результат виден на вкладке Actions и прямо в pull request (зелёная галка / красный крестик).
+name: Проверки планера
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
