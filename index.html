@@ -294,6 +294,8 @@
   .sub .sx{border:none;background:transparent;color:var(--dusk-soft);cursor:pointer;font-size:15px;width:22px;height:22px;border-radius:7px}
   .sub .sx:hover{background:rgba(231,154,138,.2);color:var(--accent-dp)}
   .sub-add{display:flex;gap:8px;margin-top:8px}
+  .copy-msg{font-size:13px;font-weight:700;color:#4a7a5c;margin-top:6px;min-height:0}
+  .copy-msg:empty{display:none}
   .sub-add input{flex:1}
 
   .btn-row{display:flex;gap:10px;margin-top:22px}
@@ -490,6 +492,14 @@
     <input type="text" id="kTag" placeholder="напр. срочно / smm / дизайн">
     <label class="f">Спринт</label>
     <select id="kSprint"></select>
+    <div id="kCopyBox">
+      <label class="f">Скопировать в другой спринт</label>
+      <div style="display:flex;gap:8px">
+        <select id="kCopySprint" style="flex:1;min-width:0"></select>
+        <button type="button" class="btn del" onclick="copyTaskToSprint()">Копировать</button>
+      </div>
+      <div id="kCopyMsg" class="copy-msg"></div>
+    </div>
     <label class="f">Подзадачи</label>
     <div class="subs" id="kSubs"></div>
     <div class="sub-add">
@@ -1084,6 +1094,7 @@ function openTask(id,col){editTaskId=id;newTaskCol=col;
     fillSprints(document.getElementById('kSprint'),state.activeSprint);
     draftTaskSubs=[];
     document.getElementById('kDel').style.display='none';}
+  fillCopySprints();
   renderTaskSubs();
   document.getElementById('ovTask').classList.add('on');setTimeout(()=>document.getElementById('kName').focus(),50);
 }
@@ -1105,6 +1116,28 @@ function saveTask(auto){
   if(editTaskId){const t=state.tasks.find(x=>x.id===editTaskId);t.name=name;t.desc=desc;t.due=due;t.tag=tag;t.sprint=sprint;t.subs=draftTaskSubs;}
   else{const col=newTaskCol||(state.taskCols[0]&&state.taskCols[0].id);state.tasks.push({id:c(),name,desc,due,tag,col,sprint,subs:draftTaskSubs})}
   save();closeOv('ovTask');renderTask();
+}
+/* копия карточки в другой спринт: оригинал остаётся, копия живёт сама по себе */
+function fillCopySprints(){
+  const box=document.getElementById('kCopyBox'),t=editTaskId&&state.tasks.find(x=>x.id===editTaskId);
+  document.getElementById('kCopyMsg').innerText='';
+  const others=t?state.sprints.filter(sp=>sp.id!==t.sprint):[];
+  box.style.display=others.length?'block':'none';
+  document.getElementById('kCopySprint').innerHTML=others.map(sp=>`<option value="${sp.id}">${esc(sp.name)}</option>`).join('');
+}
+function copyTaskToSprint(){
+  const t=state.tasks.find(x=>x.id===editTaskId);if(!t)return;
+  const target=document.getElementById('kCopySprint').value,sp=state.sprints.find(x=>x.id===target);if(!sp)return;
+  /* сначала сохраняем правки в самой карточке, чтобы копия была актуальной */
+  const subIn=document.getElementById('kSubNew');
+  if(subIn.value.trim()){draftTaskSubs.push({t:subIn.value.trim(),done:false});subIn.value='';renderTaskSubs()}
+  t.name=document.getElementById('kName').value.trim()||t.name;
+  t.desc=document.getElementById('kDesc').value.trim();t.due=document.getElementById('kDue').value;
+  t.tag=document.getElementById('kTag').value.trim();t.subs=JSON.parse(JSON.stringify(draftTaskSubs));
+  t.sprint=document.getElementById('kSprint').value||t.sprint;
+  state.tasks.push({id:c(),name:t.name,desc:t.desc,due:t.due,tag:t.tag,col:t.col,sprint:target,subs:JSON.parse(JSON.stringify(t.subs))});
+  save();renderTask();
+  document.getElementById('kCopyMsg').innerText='✓ Копия добавлена в спринт «'+sp.name+'»';
 }
 function deleteTask(){if(!confirm('Удалить карточку?'))return;
   state.tasks=state.tasks.filter(x=>x.id!==editTaskId);save();closeOv('ovTask');renderTask()}
