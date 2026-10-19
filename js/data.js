@@ -43,7 +43,9 @@ function normalizeState(s){
   if(!s.rubrics||!s.rubrics.length)s.rubrics=defRubrics();
   if(!s.formats||!s.formats.length)s.formats=defFormats();
   if(!s.sprints||!s.sprints.length)s.sprints=defSprints();
-  if(!s.activeSprint||!s.sprints.find(x=>x.id===s.activeSprint))s.activeSprint=s.sprints[0].id;
+  if(!s.sprints.some(x=>!x.archived))delete s.sprints[0].archived;
+  const act=s.sprints.find(x=>x.id===s.activeSprint);
+  if(!act||act.archived)s.activeSprint=s.sprints.find(x=>!x.archived).id;
   (s.posts||[]).forEach(p=>{
     if(!p.chans)p.chans=p.chan?[p.chan]:[];
     delete p.chan;
