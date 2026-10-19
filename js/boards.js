@@ -34,20 +34,47 @@ function postCard(p){
   return d;
 }
 
+/* архив спринтов: по желанию, из архива можно вернуть. sprintArchView — только вид, в облако не сохраняется */
+let sprintArchView=false;
+const liveSprints=()=>state.sprints.filter(sp=>!sp.archived);
+const archSprints=()=>state.sprints.filter(sp=>sp.archived);
 function renderSprintBar(){
   const bar=document.getElementById('sprintBar');if(!bar)return;
-  bar.innerHTML='<span class="sprint-lbl">Спринт</span>';
-  state.sprints.forEach(sp=>{
-    const b=document.createElement('button');b.className='spbtn'+(sp.id===state.activeSprint?' on':'');
+  const cur=state.sprints.find(x=>x.id===state.activeSprint);
+  if(sprintArchView&&!(cur&&cur.archived))sprintArchView=false; // например, данные обновились из облака
+  const btn=(cls,txt,title,fn)=>{const b=document.createElement('button');b.className=cls;b.innerText=txt;if(title)b.title=title;b.onclick=fn;bar.appendChild(b);return b};
+  bar.innerHTML=`<span class="sprint-lbl">${sprintArchView?'Архив спринтов':'Спринт'}</span>`;
+  (sprintArchView?archSprints():liveSprints()).forEach(sp=>{
     const cnt=state.tasks.filter(t=>t.sprint===sp.id).length;
-    b.innerText=sp.name+(cnt?' · '+cnt:'');
-    b.onclick=()=>{state.activeSprint=sp.id;save();renderTask()};
-    bar.appendChild(b);
+    btn('spbtn'+(sprintArchView?' arch':'')+(sp.id===state.activeSprint?' on':''),sp.name+(cnt?' · '+cnt:''),'',
+      ()=>{state.activeSprint=sp.id;save();renderTask()});
   });
-  const edit=document.createElement('button');edit.className='sp-edit';edit.innerText='✎';edit.title='переименовать / удалить активный спринт';
-  edit.onclick=editActiveSprint;bar.appendChild(edit);
-  const add=document.createElement('button');add.className='spbtn add';add.innerText='＋ спринт';
-  add.onclick=addSprint;bar.appendChild(add);
+  btn('sp-edit','✎','переименовать / удалить выбранный спринт',editActiveSprint);
+  if(sprintArchView){
+    btn('spbtn add','↩ вернуть из архива','вернуть выбранный спринт к активным',restoreSprint);
+    btn('spbtn','← к активным спринтам','',()=>{sprintArchView=false;
+      const cur=state.sprints.find(x=>x.id===state.activeSprint);
+      if(!cur||cur.archived){state.activeSprint=liveSprints()[0].id;save()}
+      renderTask()});
+  }else{
+    btn('sp-edit','в архив','убрать выбранный спринт в архив — карточки сохранятся',archiveSprint);
+    btn('spbtn add','＋ спринт','',addSprint);
+    const na=archSprints().length;
+    if(na)btn('spbtn arch','Архив · '+na,'посмотреть архивные спринты',()=>{sprintArchView=true;
+      state.activeSprint=archSprints()[0].id;save();renderTask()});
+  }
+}
+function archiveSprint(){
+  const sp=state.sprints.find(x=>x.id===state.activeSprint);if(!sp)return;
+  if(liveSprints().length<=1){alert('Нельзя убрать в архив единственный активный спринт — сначала добавь новый.');return}
+  if(!confirm('Убрать спринт «'+sp.name+'» в архив? Карточки сохранятся, спринт можно будет вернуть.'))return;
+  sp.archived=true;state.activeSprint=liveSprints()[0].id;
+  save();renderTask();
+}
+function restoreSprint(){
+  const sp=state.sprints.find(x=>x.id===state.activeSprint);if(!sp||!sp.archived)return;
+  delete sp.archived;sprintArchView=false;
+  save();renderTask();
 }
 function addSprint(){
   const name=prompt('Название спринта:','Спринт '+(state.sprints.length+1));
@@ -60,11 +87,11 @@ function editActiveSprint(){
   const name=prompt('Переименовать спринт (пустое поле — удалить спринт):',sp.name);
   if(name===null)return;
   if(!name.trim()){
-    if(state.sprints.length<=1){alert('Нельзя удалить единственный спринт');return}
+    if(!sp.archived&&liveSprints().length<=1){alert('Нельзя удалить единственный активный спринт');return}
     const cnt=state.tasks.filter(t=>t.sprint===sp.id).length;
-    if(cnt&&!confirm('В спринте «'+sp.name+'» '+cnt+' задач(и). Удалить спринт? Задачи переедут в первый оставшийся спринт.'))return;
+    if(cnt&&!confirm('В спринте «'+sp.name+'» '+cnt+' задач(и). Удалить спринт? Задачи переедут в первый активный спринт.'))return;
     state.sprints=state.sprints.filter(x=>x.id!==sp.id);
-    const fallback=state.sprints[0].id;
+    const fallback=liveSprints()[0].id;
     state.tasks.forEach(t=>{if(t.sprint===sp.id)t.sprint=fallback});
     state.activeSprint=fallback;
   }else{sp.name=name.trim()}

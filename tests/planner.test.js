@@ -216,6 +216,38 @@ test('карточку задачи можно скопировать в дру�
   await close();
 });
 
+test('спринт можно убрать в архив, посмотреть и вернуть; последний активный — нельзя', async () => {
+  // ответы по очереди: предупреждение «нельзя», название нового спринта, подтверждение архива
+  const { page, dialogs, close } = await open({ answers: [true, 'Спринт 2', true] });
+  await page.click('#tabTask');
+  const chips = () => page.$$eval('#sprintBar .spbtn:not(.add)', b => b.map(x => x.textContent));
+  await page.click('#sprintBar .sp-edit >> text=в архив');
+  assert.match(dialogs.pop(), /единственный активный/);
+
+  await page.click('#taskBoard .addcard'); await page.fill('#kName', 'Задача бэклога'); await page.click('#ovTask .btn.save');
+  await page.click('.spbtn.add >> text=спринт');            // Спринт 2, он становится выбранным
+  await page.click('.spbtn >> text=Бэклог');
+  await page.click('#sprintBar .sp-edit >> text=в архив');  // confirm → ОК
+  assert.deepEqual(await chips(page), ['Спринт 2', 'Архив · 1']);
+  assert.equal(await page.locator('#taskBoard .card').count(), 0, 'карточки архивного спринта не видны среди активных');
+
+  await page.click('.spbtn >> text=Архив · 1');
+  assert.equal(await page.textContent('#sprintBar .sprint-lbl'), 'Архив спринтов');
+  assert.equal(await page.locator('#taskBoard .card >> text=Задача бэклога').count(), 1, 'в архиве карточки на месте');
+
+  await page.click('#taskBoard .addcard'); await page.keyboard.press('Escape');
+  await page.click('#taskBoard .card'); // в окне задачи архивный спринт подписан, копировать в него нельзя
+  assert.ok((await page.$$eval('#kSprint option', o => o.map(x => x.textContent))).includes('Бэклог (архив)'));
+  assert.deepEqual(await page.$$eval('#kCopySprint option', o => o.map(x => x.textContent)), ['Спринт 2']);
+  await page.keyboard.press('Escape');
+
+  await page.click('.spbtn >> text=вернуть из архива');
+  assert.deepEqual(await chips(page), ['Бэклог · 1', 'Спринт 2']);
+  await page.reload(); await page.click('#tabTask');
+  assert.deepEqual(await chips(page), ['Бэклог · 1', 'Спринт 2'], 'после перезагрузки всё на месте');
+  await close();
+});
+
 test('данные сохраняются после перезагрузки страницы', async () => {
   const { page, close } = await open();
   await page.click('#tabHadi');

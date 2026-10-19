@@ -65,7 +65,8 @@ function deletePost(){if(!confirm('Удалить пост? Он исчезне�
   state.posts=state.posts.filter(x=>x.id!==editPostId);unlinkIdeas([editPostId]);save();closeOv('ovPost');renderCal();renderDev()}
 
 let editTaskId=null,newTaskCol=null,draftTaskSubs=[];
-function fillSprints(sel,val){sel.innerHTML=state.sprints.map(sp=>`<option value="${sp.id}" ${sp.id===val?'selected':''}>${esc(sp.name)}</option>`).join('')}
+function fillSprints(sel,val){sel.innerHTML=state.sprints.filter(sp=>!sp.archived||sp.id===val)
+  .map(sp=>`<option value="${sp.id}" ${sp.id===val?'selected':''}>${esc(sp.name)}${sp.archived?' (архив)':''}</option>`).join('')}
 function renderTaskSubs(){const box=document.getElementById('kSubs');box.innerHTML='';
   draftTaskSubs.forEach((s,i)=>{const el=document.createElement('div');el.className='sub';
     el.innerHTML=`<input type="checkbox" ${s.done?'checked':''} onchange="draftTaskSubs[${i}].done=this.checked;renderTaskSubs()">
@@ -113,7 +114,7 @@ function saveTask(auto){
 function fillCopySprints(){
   const box=document.getElementById('kCopyBox'),t=editTaskId&&state.tasks.find(x=>x.id===editTaskId);
   document.getElementById('kCopyMsg').innerText='';
-  const others=t?state.sprints.filter(sp=>sp.id!==t.sprint):[];
+  const others=t?state.sprints.filter(sp=>sp.id!==t.sprint&&!sp.archived):[];
   box.style.display=others.length?'block':'none';
   document.getElementById('kCopySprint').innerHTML=others.map(sp=>`<option value="${sp.id}">${esc(sp.name)}</option>`).join('');
 }

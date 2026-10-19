@@ -130,6 +130,8 @@ h2.sec{font-family:'Montserrat',sans-serif;font-weight:800;font-size:24px;color:
 .spbtn.on{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
 .spbtn.add{border-style:dashed;color:var(--accent-dp);border-color:rgba(231,154,138,.5)}
 .spbtn.add:hover{background:rgba(231,154,138,.12)}
+.spbtn.arch{border-style:dashed;color:var(--dusk-soft);background:rgba(255,255,255,.35)}
+.spbtn.arch.on{background:var(--dusk-soft);border-color:var(--dusk-soft);color:#fff;border-style:solid}
 .sp-edit{border:none;background:transparent;color:var(--dusk-soft);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:8px}
 .sp-edit:hover{background:rgba(231,154,138,.18);color:var(--accent-dp)}
 .addcard{width:100%;border:2px dashed rgba(231,154,138,.4);background:transparent;color:var(--accent-dp);
